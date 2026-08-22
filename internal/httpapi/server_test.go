@@ -25,7 +25,11 @@ func TestHealthAndProfiles(t *testing.T) {
 
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/profiles", nil))
-	var body struct{ Profiles []struct{ ID string `json:"id"` } `json:"profiles"` }
+	var body struct {
+		Profiles []struct {
+			ID string `json:"id"`
+		} `json:"profiles"`
+	}
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}

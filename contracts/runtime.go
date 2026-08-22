@@ -3,9 +3,9 @@ package contracts
 import "time"
 
 const (
-	HealthContractVersion = "fluent-task-runtime.health.v1"
+	HealthContractVersion  = "fluent-task-runtime.health.v1"
 	ProfileContractVersion = "fluent-task-runtime.profiles.v1"
-	RunContractVersion = "fluent-task-runtime.run.v1"
+	RunContractVersion     = "fluent-task-runtime.run.v1"
 )
 
 type Health struct {
@@ -18,14 +18,14 @@ type Health struct {
 }
 
 type Profile struct {
-	ID              string   `json:"id"`
-	DisplayName     string   `json:"displayName"`
-	Toolchain       string   `json:"toolchain"`
-	Image           string   `json:"image"`
-	Status          string   `json:"status"`
-	Network         string   `json:"network"`
-	HiddenTests     bool     `json:"hiddenTests"`
-	SupportedTasks  []string `json:"supportedTasks"`
+	ID             string   `json:"id"`
+	DisplayName    string   `json:"displayName"`
+	Toolchain      string   `json:"toolchain"`
+	Image          string   `json:"image"`
+	Status         string   `json:"status"`
+	Network        string   `json:"network"`
+	HiddenTests    bool     `json:"hiddenTests"`
+	SupportedTasks []string `json:"supportedTasks"`
 }
 
 type Profiles struct {
