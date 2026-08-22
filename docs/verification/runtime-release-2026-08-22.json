@@ -1,7 +1,7 @@
 {
   "verification": "fluent-task-runtime.release.v2",
   "date": "2026-08-22",
-  "runtimeCommit": "c8295d2",
+  "runtimeCommit": "b149a4c",
   "compose": {
     "api": "http://127.0.0.1:48227",
     "jaeger": "http://127.0.0.1:56687",
@@ -45,5 +45,5 @@
     "correlationPrefix": "release-smoke-",
     "jaegerChecked": true
   },
-  "remainingGate": "R3 dual-run parity against the legacy runner and a production remote sandbox provider"
+  "remainingGate": "Lab project-book release/evidence join and a production remote sandbox provider"
 }
