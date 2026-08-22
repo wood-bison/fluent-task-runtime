@@ -20,6 +20,7 @@ func NewServer(catalogue *engine.Catalogue) http.Handler {
 	mux.HandleFunc("GET /v1/health/live", server.live)
 	mux.HandleFunc("GET /v1/health/ready", server.ready)
 	mux.HandleFunc("GET /v1/profiles", server.profiles)
+	mux.HandleFunc("GET /v1/tasks", server.tasks)
 	mux.HandleFunc("POST /v1/runs", server.runs)
 	return requestLog(mux)
 }
@@ -48,6 +49,10 @@ func (s *Server) ready(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) profiles(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, s.catalogue.Profiles())
+}
+
+func (s *Server) tasks(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, s.catalogue.Tasks())
 }
 
 func (s *Server) runs(w http.ResponseWriter, r *http.Request) {

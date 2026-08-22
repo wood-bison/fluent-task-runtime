@@ -5,6 +5,7 @@ import "time"
 const (
 	HealthContractVersion  = "fluent-task-runtime.health.v1"
 	ProfileContractVersion = "fluent-task-runtime.profiles.v1"
+	TaskContractVersion    = "fluent-task-runtime.tasks.v1"
 	RunContractVersion     = "fluent-task-runtime.run.v1"
 )
 
@@ -31,6 +32,25 @@ type Profile struct {
 type Profiles struct {
 	ContractVersion string    `json:"contractVersion"`
 	Profiles        []Profile `json:"profiles"`
+}
+
+// Task is an immutable task-revision descriptor. It is deliberately metadata
+// only: starter files and hidden tests stay in the pinned OCI image until the
+// sandbox execution gate is closed.
+type Task struct {
+	ID          string `json:"taskId"`
+	Revision    int    `json:"revision"`
+	Profile     string `json:"profile"`
+	Runtime     string `json:"runtime"`
+	Image       string `json:"image"`
+	Status      string `json:"status"`
+	Network     string `json:"network"`
+	HiddenTests bool   `json:"hiddenTests"`
+}
+
+type Tasks struct {
+	ContractVersion string `json:"contractVersion"`
+	Tasks           []Task `json:"tasks"`
 }
 
 type RuntimeError struct {

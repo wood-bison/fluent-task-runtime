@@ -16,15 +16,18 @@ R2 is the active gate from the Lab migration plan:
 - `/v1/health/live` and `/v1/health/ready` are explicit;
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
+- `/v1/tasks` exposes the 14 pinned task-revision descriptors (nine Node.js,
+  one .NET, two PostgreSQL, one Go and one Java); `status=declared` means the
+  image and hidden-test harness are registered, not that a run is yet open;
 - `/v1/runs` is deliberately not advertised as executable until the sandbox
   adapter and task-pack revisions land;
 - Jaeger is available in the local Compose profile on a unique port.
 - The image build is architecture-portable: Compose supplies BuildKit's
   `TARGETARCH` and the binary listens on `RUNTIME_PORT` (default `48227`).
 
-The next gate adds one real task revision and a Docker-backed harness. Until
-then, a caller receives a truthful `runtime_not_ready` response rather than a
-fake pass or a browser-owned verdict.
+The next gate adds the Docker-backed harness and dual-run evidence. Until then,
+a caller receives a truthful `runtime_not_ready` response rather than a fake
+pass or a browser-owned verdict.
 
 ## Boundaries
 

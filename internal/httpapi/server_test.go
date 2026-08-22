@@ -12,7 +12,7 @@ import (
 
 func TestHealthAndProfiles(t *testing.T) {
 	handler := NewServer(engine.NewCatalogue())
-	for _, path := range []string{"/v1/health/live", "/v1/health/ready", "/v1/profiles"} {
+	for _, path := range []string{"/v1/health/live", "/v1/health/ready", "/v1/profiles", "/v1/tasks"} {
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
 		if recorder.Code != http.StatusOK {
@@ -36,6 +36,15 @@ func TestHealthAndProfiles(t *testing.T) {
 	}
 	if len(body.Profiles) != 5 || body.Profiles[0].ID != "node" || body.Profiles[4].ID != "java" {
 		t.Fatalf("unexpected profile catalogue: %#v", body.Profiles)
+	}
+	if len(body.Profiles[0].SupportedTasks) != 9 {
+		t.Fatalf("unexpected Node task count: %#v", body.Profiles[0].SupportedTasks)
+	}
+
+	tasksRecorder := httptest.NewRecorder()
+	handler.ServeHTTP(tasksRecorder, httptest.NewRequest(http.MethodGet, "/v1/tasks", nil))
+	if tasksRecorder.Code != http.StatusOK || !strings.Contains(tasksRecorder.Body.String(), `"taskId":"go-rate-limiter-001"`) {
+		t.Fatalf("unexpected task catalogue: %d %s", tasksRecorder.Code, tasksRecorder.Body.String())
 	}
 	if body.Profiles[0].SupportedTasks == nil {
 		t.Fatal("profile supportedTasks must be an empty array, not null")
