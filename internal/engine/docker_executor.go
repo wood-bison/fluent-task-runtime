@@ -215,7 +215,11 @@ func dockerArgs(task contracts.Task, inputDir, hiddenDir, outputDir, correlation
 	if cpus <= 0 {
 		cpus = 1
 	}
-	name := "fel-task-" + safeToken(task.ID) + "-" + safeToken(correlationID)
+	// Keep runtime container names separate from Fluent Lab's compatibility
+	// runner. Both services may be smoke-tested at once on the same Docker
+	// daemon; a shared prefix makes accidental cleanup and name collisions too
+	// easy to miss.
+	name := "fluent-runtime-task-" + safeToken(task.ID) + "-" + safeToken(correlationID)
 	args := []string{"run", "--rm", "--name", name, "--pull", "never", "--network", "none", "--memory", fmt.Sprintf("%dm", memory), "--memory-swap", fmt.Sprintf("%dm", memory), "--cpus", fmt.Sprintf("%g", cpus), "--pids-limit", "256", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=128m", "-v", inputDir + ":/solution:ro", "-v", hiddenDir + ":/hidden-tests:ro", "-v", outputDir + ":/output", task.Image}
 	if task.User != "" {
 		args = append(args[:len(args)-1], "--user", task.User, args[len(args)-1])

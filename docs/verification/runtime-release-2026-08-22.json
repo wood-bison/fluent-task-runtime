@@ -7,7 +7,8 @@
     "jaeger": "http://127.0.0.1:56687",
     "health": "ready",
     "sandbox": "ready",
-    "network": "none"
+    "network": "none",
+    "imageNamespace": "fluent-runtime-task-*"
   },
   "catalogue": {
     "total": 14,

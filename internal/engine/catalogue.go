@@ -23,11 +23,11 @@ func NewCatalogue() *Catalogue {
 	tasksRoot := defaultTasksRoot()
 	tasks := loadTasks(tasksRoot)
 	profiles := []contracts.Profile{
-		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 10", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "postgres", DisplayName: "PostgreSQL", Toolchain: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "go", DisplayName: "Go", Toolchain: "Go 1.24", Image: "fel-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "java", DisplayName: "Java", Toolchain: "JDK 21", Image: "fel-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 10", Image: "fluent-runtime-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "postgres", DisplayName: "PostgreSQL", Toolchain: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "go", DisplayName: "Go", Toolchain: "Go 1.24", Image: "fluent-runtime-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "java", DisplayName: "Java", Toolchain: "JDK 21", Image: "fluent-runtime-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
 	}
 	for index := range profiles {
 		for _, task := range tasks {
@@ -124,20 +124,20 @@ func loadTasks(root string) []contracts.Task {
 
 func fallbackTasks() []contracts.Task {
 	return []contracts.Task{
-		{ID: "deferred", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "fluent-calculator", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "released", Network: "none", HiddenTests: true},
-		{ID: "node-auth-015", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-cache-014", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-concurrency-012", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-cpu-bound-002", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-idempotency-013", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-memory-004", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-streams-003", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "dotnet-cancellation-001", Revision: 1, Profile: "dotnet", Runtime: ".NET 10", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "pg-indexes-008", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "pg-locks-016", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "go-rate-limiter-001", Revision: 1, Profile: "go", Runtime: "Go 1.24", Image: "fel-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "java-rate-limiter-001", Revision: 1, Profile: "java", Runtime: "Java 21", Image: "fel-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "deferred", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "fluent-calculator", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "released", Network: "none", HiddenTests: true},
+		{ID: "node-auth-015", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-cache-014", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-concurrency-012", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-cpu-bound-002", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-idempotency-013", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-memory-004", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-streams-003", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "dotnet-cancellation-001", Revision: 1, Profile: "dotnet", Runtime: ".NET 10", Image: "fluent-runtime-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "pg-indexes-008", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "pg-locks-016", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "go-rate-limiter-001", Revision: 1, Profile: "go", Runtime: "Go 1.24", Image: "fluent-runtime-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "java-rate-limiter-001", Revision: 1, Profile: "java", Runtime: "Java 21", Image: "fluent-runtime-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
 	}
 }
 

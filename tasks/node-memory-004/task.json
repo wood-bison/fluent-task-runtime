@@ -12,7 +12,7 @@
   "questionKeys": ["Q816"],
   "questionReleaseId": "question-release-0dd14cc814fba1c7",
   "artifacts": ["retention.json"],
-  "image": "fel-task-node:1",
+  "image": "fluent-runtime-task-node:1",
   "checkCommand": ["node", "/opt/harness/run.js"],
   "editableFiles": ["retainer.js"],
   "timeoutMs": 20000,

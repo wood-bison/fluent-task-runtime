@@ -14,7 +14,7 @@ func TestCatalogueHonoursTaskReleaseMetadata(t *testing.T) {
 		if err := os.MkdirAll(directory, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		body := `{"taskId":"` + id + `","revision":7,"status":"` + status + `","profile":"node","runtime":"Node.js 24","image":"fel-task-node:1","checkCommand":["node"],"editableFiles":["main.js"],"user":"` + user + `"}`
+		body := `{"taskId":"` + id + `","revision":7,"status":"` + status + `","profile":"node","runtime":"Node.js 24","image":"fluent-runtime-task-node:1","checkCommand":["node"],"editableFiles":["main.js"],"user":"` + user + `"}`
 		if err := os.WriteFile(filepath.Join(directory, "task.json"), []byte(body), 0o644); err != nil {
 			t.Fatal(err)
 		}

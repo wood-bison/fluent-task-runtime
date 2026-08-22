@@ -11,7 +11,7 @@
   "profile": "node",
   "questionKeys": ["Q775"],
   "questionReleaseId": "question-release-0dd14cc814fba1c7",
-  "image": "fel-task-node:1",
+  "image": "fluent-runtime-task-node:1",
   "checkCommand": ["node", "/opt/harness/run.js"],
   "editableFiles": ["cpu.js"],
   "timeoutMs": 20000,

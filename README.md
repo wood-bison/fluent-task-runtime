@@ -58,8 +58,17 @@ curl http://127.0.0.1:48227/v1/health/ready
 Compose adds Jaeger at <http://127.0.0.1:56687>:
 
 ```sh
+docker build -t fluent-runtime-task-node:1 task-images/node
+docker build -t fluent-runtime-task-dotnet:1 task-images/dotnet
+docker build -t fluent-runtime-task-postgres:1 task-images/postgres
+docker build -t fluent-runtime-task-go:1 task-images/go
+docker build -t fluent-runtime-task-java:1 task-images/java
 docker compose -f deploy/compose/compose.yaml up -d
 ```
+
+The `fluent-runtime-task-*` image namespace is intentional: Lab's legacy
+compatibility runner owns a separate `fel-task-*` namespace, so rebuilding Lab
+cannot silently replace a runtime sandbox image.
 
 The Compose profile sends OTLP/gRPC to Jaeger's `4317` receiver. Verify that
 the service is receiving traces after a smoke run:

@@ -13,7 +13,7 @@
   "questionKeys": ["Q695", "Q700"],
   "questionReleaseId": "question-release-0dd14cc814fba1c7",
   "artifacts": ["plan.json"],
-  "image": "fel-task-postgres:1",
+  "image": "fluent-runtime-task-postgres:1",
   "checkCommand": ["bash", "/opt/harness/run.sh"],
   "editableFiles": ["solution.sql"],
   "timeoutMs": 30000,
