@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/wood-bison/fluent-task-runtime/contracts"
 )
@@ -22,8 +23,8 @@ func NewCatalogue() *Catalogue {
 	tasksRoot := defaultTasksRoot()
 	tasks := loadTasks(tasksRoot)
 	profiles := []contracts.Profile{
-		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 22", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 9", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 10", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "postgres", DisplayName: "PostgreSQL", Toolchain: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "go", DisplayName: "Go", Toolchain: "Go 1.24", Image: "fel-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "java", DisplayName: "Java", Toolchain: "JDK 21", Image: "fel-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
@@ -61,6 +62,8 @@ func defaultTasksRoot() string {
 
 type taskDescriptor struct {
 	TaskID        string   `json:"taskId"`
+	Revision      int      `json:"revision"`
+	Status        string   `json:"status"`
 	Runtime       string   `json:"runtime"`
 	Profile       string   `json:"profile"`
 	Image         string   `json:"image"`
@@ -69,6 +72,7 @@ type taskDescriptor struct {
 	TimeoutMS     int      `json:"timeoutMs"`
 	MemoryMB      int      `json:"memoryMb"`
 	CPUs          float64  `json:"cpus"`
+	User          string   `json:"user"`
 	Artifacts     []string `json:"artifacts"`
 }
 
@@ -95,16 +99,20 @@ func loadTasks(root string) []contracts.Task {
 		if decodeErr := json.Unmarshal(body, &descriptor); decodeErr != nil || descriptor.TaskID != id {
 			continue
 		}
+		revision := descriptor.Revision
+		if revision < 1 {
+			revision = 1
+		}
 		status := "declared"
-		if id == "fluent-calculator" {
+		if strings.EqualFold(strings.TrimSpace(descriptor.Status), "released") {
 			status = "released"
 		}
 		tasks = append(tasks, contracts.Task{
-			ID: id, Revision: 1, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
+			ID: id, Revision: revision, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
 			Image: descriptor.Image, Status: status, Network: "none", HiddenTests: true,
 			CheckCommand:  append([]string(nil), descriptor.CheckCommand...),
 			EditableFiles: append([]string(nil), descriptor.EditableFiles...),
-			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs,
+			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs, User: descriptor.User,
 			Artifacts: append([]string(nil), descriptor.Artifacts...),
 		})
 	}

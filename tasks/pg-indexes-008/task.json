@@ -1,5 +1,8 @@
 {
   "taskId": "pg-indexes-008",
+  "revision": 1,
+  "status": "released",
+  "user": "999:999",
   "title": "Index that the planner rejects",
   "summary": "Measure why PostgreSQL ignores a low-selectivity index instead of trusting its name.",
   "breadcrumb": ["PostgreSQL depth", "Indexes and EXPLAIN"],

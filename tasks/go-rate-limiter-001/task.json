@@ -1,5 +1,7 @@
 {
   "taskId": "go-rate-limiter-001",
+  "revision": 1,
+  "status": "released",
   "title": "Rate limiter in Go",
   "summary": "Implement a deterministic token-bucket limiter with per-key isolation and monotonic refill.",
   "breadcrumb": ["Go runtime", "Concurrency and resilience"],

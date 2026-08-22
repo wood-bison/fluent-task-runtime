@@ -18,9 +18,9 @@ runtime slice:
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
 - `/v1/tasks` exposes the 14 pinned task-revision descriptors (nine Node.js,
-  one .NET, two PostgreSQL, one Go and one Java); `status=released` is currently
-  limited to the `fluent-calculator@1` Node task, while all other revisions stay
-  `declared` until their harness proof lands;
+  one .NET, two PostgreSQL, one Go and one Java); five revisions are now
+  `released` (one per profile, including `fluent-calculator@1`) and the other
+  nine stay `declared` until their own harness proof lands;
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
   versioned result envelope;

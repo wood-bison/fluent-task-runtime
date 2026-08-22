@@ -1,5 +1,7 @@
 {
   "taskId": "dotnet-cancellation-001",
+  "revision": 1,
+  "status": "released",
   "title": ".NET cancellation boundary",
   "summary": "Keep async work cancellable so a request does not outlive its caller.",
   "breadcrumb": [".NET runtime", "Tasks and lifetime"],

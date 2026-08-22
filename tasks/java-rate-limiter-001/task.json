@@ -1,5 +1,7 @@
 {
   "taskId": "java-rate-limiter-001",
+  "revision": 1,
+  "status": "released",
   "title": "Rate limiter in Java",
   "summary": "Implement a deterministic token-bucket limiter with per-key isolation and monotonic refill.",
   "breadcrumb": ["Java runtime", "Concurrency and resilience"],

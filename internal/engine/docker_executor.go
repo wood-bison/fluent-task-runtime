@@ -108,6 +108,12 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 			return contracts.RunResponse{}, &ExecutionError{Code: "sandbox_setup_failed", Message: "could not prepare the disposable workspace", Status: 503, Retryable: true}
 		}
 	}
+	// The task process may run as a non-root profile user (PostgreSQL uses
+	// uid/gid 999). Output is disposable and must be writable by that user;
+	// learner input and hidden tests remain read-only mounts below.
+	if err := os.Chmod(outputDir, 0o777); err != nil {
+		return contracts.RunResponse{}, &ExecutionError{Code: "sandbox_setup_failed", Message: "could not make the disposable output writable", Status: 503, Retryable: true}
+	}
 	if err := e.prepareTask(task, inputDir, hiddenDir, request.Files); err != nil {
 		return contracts.RunResponse{}, &ExecutionError{Code: "sandbox_setup_failed", Message: sanitizeError(err.Error()), Status: 503, Retryable: false}
 	}
@@ -211,6 +217,9 @@ func dockerArgs(task contracts.Task, inputDir, hiddenDir, outputDir, correlation
 	}
 	name := "fel-task-" + safeToken(task.ID) + "-" + safeToken(correlationID)
 	args := []string{"run", "--rm", "--name", name, "--pull", "never", "--network", "none", "--memory", fmt.Sprintf("%dm", memory), "--memory-swap", fmt.Sprintf("%dm", memory), "--cpus", fmt.Sprintf("%g", cpus), "--pids-limit", "256", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=128m", "-v", inputDir + ":/solution:ro", "-v", hiddenDir + ":/hidden-tests:ro", "-v", outputDir + ":/output", task.Image}
+	if task.User != "" {
+		args = append(args[:len(args)-1], "--user", task.User, args[len(args)-1])
+	}
 	return append(args, task.CheckCommand...)
 }
 

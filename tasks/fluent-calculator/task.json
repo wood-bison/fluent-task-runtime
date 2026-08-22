@@ -1,5 +1,7 @@
 {
   "taskId": "fluent-calculator",
+  "revision": 1,
+  "status": "released",
   "title": "Fluent calculator",
   "summary": "Build a small stateful API whose fluent chain stays correct at its edges.",
   "breadcrumb": ["Workspace tasks", "JavaScript foundations"],

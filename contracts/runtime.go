@@ -51,6 +51,7 @@ type Task struct {
 	TimeoutMS     int      `json:"timeoutMs,omitempty"`
 	MemoryMB      int      `json:"memoryMb,omitempty"`
 	CPUs          float64  `json:"cpus,omitempty"`
+	User          string   `json:"user,omitempty"`
 	Artifacts     []string `json:"artifacts,omitempty"`
 }
 
