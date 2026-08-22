@@ -10,6 +10,9 @@ services:
     environment:
       RUNTIME_PORT: "48227"
       RUNTIME_EXECUTION_ENABLED: "true"
+      OTEL_SERVICE_NAME: fluent-task-runtime
+      OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       # Set this to the same absolute host path used as the bind source below
       # when you want nested task containers to execute in local Compose.
       RUNTIME_WORK_ROOT: "${RUNTIME_HOST_WORK_ROOT:-/runtime-work}"

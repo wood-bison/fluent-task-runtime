@@ -7,6 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/wood-bison/fluent-task-runtime/contracts"
 	"github.com/wood-bison/fluent-task-runtime/internal/engine"
 )
@@ -66,6 +71,9 @@ func (s *Server) tasks(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
+	ctx, span := otel.Tracer("fluent-task-runtime/run").Start(r.Context(), "task.run", trace.WithSpanKind(trace.SpanKindInternal))
+	defer span.End()
+	r = r.WithContext(ctx)
 	var request contracts.RunRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "invalid_request", Message: "run request must be valid JSON", Retryable: false})
@@ -75,6 +83,11 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "invalid_request", Message: "taskId and positive taskRevision are required", Retryable: false})
 		return
 	}
+	span.SetAttributes(
+		attribute.String("fluent.task.id", request.TaskID),
+		attribute.Int("fluent.task.revision", request.TaskRevision),
+		attribute.String("fluent.run.correlation_id", request.Correlation),
+	)
 	task, found := s.catalogue.Task(request.TaskID, request.TaskRevision)
 	if !found {
 		writeJSON(w, http.StatusNotFound, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "unknown_task", Message: "task revision is not in the runtime catalogue", Retryable: false})
@@ -97,20 +110,60 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadGateway, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "runner_failed", Message: "task execution failed", Retryable: false})
 		return
 	}
+	span.SetAttributes(attribute.String("fluent.run.result", response.Results.Status))
 	writeJSON(w, http.StatusOK, response)
 }
 
 func requestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+		ctx, span := otel.Tracer("fluent-task-runtime/http").Start(ctx, r.Method+" "+r.URL.Path, trace.WithSpanKind(trace.SpanKindServer))
+		defer span.End()
 		started := time.Now()
 		requestID := r.Header.Get("x-request-id")
 		if requestID == "" {
 			requestID = "runtime-local"
 		}
 		w.Header().Set("x-request-id", requestID)
-		next.ServeHTTP(w, r)
-		_ = started // structured tracing is added with the sandbox worker gate
+		span.SetAttributes(
+			attribute.String("http.request.method", r.Method),
+			attribute.String("url.path", r.URL.Path),
+			attribute.String("fluent.request.id", requestID),
+		)
+		writer := &statusWriter{ResponseWriter: w}
+		next.ServeHTTP(writer, r.WithContext(ctx))
+		span.SetAttributes(
+			attribute.Int("http.response.status_code", writer.statusCode()),
+			attribute.Float64("http.server.duration_ms", float64(time.Since(started).Microseconds())/1000),
+		)
 	})
+}
+
+type statusWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *statusWriter) WriteHeader(status int) {
+	if w.status != 0 {
+		return
+	}
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusWriter) Write(body []byte) (int, error) {
+	if w.status == 0 {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(body)
+}
+
+func (w *statusWriter) statusCode() int {
+	if w.status == 0 {
+		return http.StatusOK
+	}
+	return w.status
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

@@ -10,7 +10,8 @@ bounded result contract.
 
 ## Current gate
 
-The current gate from the Lab migration plan is a deliberately small R3 slice:
+The current gate from the Lab migration plan is the deliberately small R2
+runtime slice:
 
 - Go HTTP control plane boots locally;
 - `/v1/health/live` and `/v1/health/ready` are explicit;
@@ -23,7 +24,10 @@ The current gate from the Lab migration plan is a deliberately small R3 slice:
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
   versioned result envelope;
-- Jaeger is available in the local Compose profile on a unique port.
+- Jaeger is available in the local Compose profile on a unique port; readiness
+  reports the Docker sandbox probe separately from the catalogue and the HTTP
+  control plane emits OTLP spans for every request plus a child span for each
+  task run.
 - The image build is architecture-portable: Compose supplies BuildKit's
   `TARGETARCH` and the binary listens on `RUNTIME_PORT` (default `48227`).
 
@@ -51,6 +55,17 @@ Compose adds Jaeger at <http://127.0.0.1:56687>:
 ```sh
 docker compose -f deploy/compose/compose.yaml up -d
 ```
+
+The Compose profile sends OTLP/gRPC to Jaeger's `4317` receiver. Verify that
+the service is receiving traces after a smoke run:
+
+```sh
+curl http://127.0.0.1:56687/api/services
+```
+
+When running the binary directly, set `OTEL_EXPORTER_OTLP_ENDPOINT` to an
+OTLP/gRPC endpoint (for example `127.0.0.1:14317`). Omitting it intentionally
+uses OpenTelemetry's no-op provider, which keeps local unit tests isolated.
 
 The local Compose execution profile mounts the Docker socket only to launch
 disposable task containers; this is intentionally a development boundary. A

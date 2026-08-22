@@ -2,7 +2,7 @@ FROM golang:1.24-bookworm AS build
 WORKDIR /src
 ARG TARGETOS=linux
 ARG TARGETARCH
-COPY go.mod ./
+COPY go.mod go.sum ./
 COPY contracts ./contracts
 COPY internal ./internal
 COPY cmd ./cmd
