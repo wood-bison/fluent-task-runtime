@@ -1,32 +1,26 @@
 package engine
 
-import "github.com/wood-bison/fluent-task-runtime/contracts"
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"sort"
+
+	"github.com/wood-bison/fluent-task-runtime/contracts"
+)
 
 // Catalogue is the immutable profile catalogue exposed by the runtime. Task
 // revisions will be added only after their image and harness digests are
 // verified; a profile cannot silently imply that every task is runnable.
 type Catalogue struct {
-	profiles contracts.Profiles
-	tasks    contracts.Tasks
+	profiles  contracts.Profiles
+	tasks     contracts.Tasks
+	tasksRoot string
 }
 
 func NewCatalogue() *Catalogue {
-	tasks := []contracts.Task{
-		{ID: "deferred", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "fluent-calculator", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-auth-015", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-cache-014", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-concurrency-012", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-cpu-bound-002", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-idempotency-013", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-memory-004", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-streams-003", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "dotnet-cancellation-001", Revision: 1, Profile: "dotnet", Runtime: ".NET 10", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "pg-indexes-008", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "pg-locks-016", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "go-rate-limiter-001", Revision: 1, Profile: "go", Runtime: "Go 1.24", Image: "fel-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "java-rate-limiter-001", Revision: 1, Profile: "java", Runtime: "Java 21", Image: "fel-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
-	}
+	tasksRoot := defaultTasksRoot()
+	tasks := loadTasks(tasksRoot)
 	profiles := []contracts.Profile{
 		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 22", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 9", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
@@ -40,17 +34,127 @@ func NewCatalogue() *Catalogue {
 				profiles[index].SupportedTasks = append(profiles[index].SupportedTasks, task.ID)
 			}
 		}
+		for _, task := range tasks {
+			if task.Profile == profiles[index].ID && task.Status == "released" {
+				profiles[index].Status = "ready"
+				break
+			}
+		}
 	}
-	return &Catalogue{profiles: contracts.Profiles{
+	return &Catalogue{tasksRoot: tasksRoot, profiles: contracts.Profiles{
 		ContractVersion: contracts.ProfileContractVersion,
 		Profiles:        profiles,
 	}, tasks: contracts.Tasks{ContractVersion: contracts.TaskContractVersion, Tasks: tasks}}
 }
 
+func defaultTasksRoot() string {
+	if configured := os.Getenv("RUNTIME_TASKS_ROOT"); configured != "" {
+		return configured
+	}
+	for _, candidate := range []string{"/opt/tasks", "tasks", filepath.Join("..", "tasks")} {
+		if entries, err := os.ReadDir(candidate); err == nil && len(entries) > 0 {
+			return candidate
+		}
+	}
+	return "tasks"
+}
+
+type taskDescriptor struct {
+	TaskID        string   `json:"taskId"`
+	Runtime       string   `json:"runtime"`
+	Profile       string   `json:"profile"`
+	Image         string   `json:"image"`
+	CheckCommand  []string `json:"checkCommand"`
+	EditableFiles []string `json:"editableFiles"`
+	TimeoutMS     int      `json:"timeoutMs"`
+	MemoryMB      int      `json:"memoryMb"`
+	CPUs          float64  `json:"cpus"`
+	Artifacts     []string `json:"artifacts"`
+}
+
+func loadTasks(root string) []contracts.Task {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return fallbackTasks()
+	}
+	ids := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			ids = append(ids, entry.Name())
+		}
+	}
+	sort.Strings(ids)
+	tasks := make([]contracts.Task, 0, len(ids))
+	for _, id := range ids {
+		path := filepath.Join(root, id, "task.json")
+		body, readErr := os.ReadFile(path)
+		if readErr != nil {
+			continue
+		}
+		var descriptor taskDescriptor
+		if decodeErr := json.Unmarshal(body, &descriptor); decodeErr != nil || descriptor.TaskID != id {
+			continue
+		}
+		status := "declared"
+		if id == "fluent-calculator" {
+			status = "released"
+		}
+		tasks = append(tasks, contracts.Task{
+			ID: id, Revision: 1, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
+			Image: descriptor.Image, Status: status, Network: "none", HiddenTests: true,
+			CheckCommand:  append([]string(nil), descriptor.CheckCommand...),
+			EditableFiles: append([]string(nil), descriptor.EditableFiles...),
+			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs,
+			Artifacts: append([]string(nil), descriptor.Artifacts...),
+		})
+	}
+	if len(tasks) == 0 {
+		return fallbackTasks()
+	}
+	return tasks
+}
+
+func fallbackTasks() []contracts.Task {
+	return []contracts.Task{
+		{ID: "deferred", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "fluent-calculator", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "released", Network: "none", HiddenTests: true},
+		{ID: "node-auth-015", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-cache-014", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-concurrency-012", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-cpu-bound-002", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-idempotency-013", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-memory-004", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node-streams-003", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fel-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "dotnet-cancellation-001", Revision: 1, Profile: "dotnet", Runtime: ".NET 10", Image: "fel-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "pg-indexes-008", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "pg-locks-016", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fel-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "go-rate-limiter-001", Revision: 1, Profile: "go", Runtime: "Go 1.24", Image: "fel-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "java-rate-limiter-001", Revision: 1, Profile: "java", Runtime: "Java 21", Image: "fel-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
+	}
+}
+
 func (c *Catalogue) Tasks() contracts.Tasks {
 	result := contracts.Tasks{ContractVersion: c.tasks.ContractVersion, Tasks: make([]contracts.Task, len(c.tasks.Tasks))}
 	copy(result.Tasks, c.tasks.Tasks)
+	for index := range result.Tasks {
+		result.Tasks[index].CheckCommand = append([]string(nil), c.tasks.Tasks[index].CheckCommand...)
+		result.Tasks[index].EditableFiles = append([]string(nil), c.tasks.Tasks[index].EditableFiles...)
+		result.Tasks[index].Artifacts = append([]string(nil), c.tasks.Tasks[index].Artifacts...)
+	}
 	return result
+}
+
+func (c *Catalogue) Task(id string, revision int) (contracts.Task, bool) {
+	for _, task := range c.tasks.Tasks {
+		if task.ID == id && task.Revision == revision {
+			return task, true
+		}
+	}
+	return contracts.Task{}, false
+}
+
+func (c *Catalogue) TasksRoot() string {
+	return c.tasksRoot
 }
 
 func (c *Catalogue) Profiles() contracts.Profiles {

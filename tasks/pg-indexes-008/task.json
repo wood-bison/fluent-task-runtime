@@ -1,0 +1,24 @@
+{
+  "taskId": "pg-indexes-008",
+  "title": "Index that the planner rejects",
+  "summary": "Measure why PostgreSQL ignores a low-selectivity index instead of trusting its name.",
+  "breadcrumb": ["PostgreSQL depth", "Indexes and EXPLAIN"],
+  "concepts": ["Selectivity", "Planner cost", "EXPLAIN ANALYZE"],
+  "runtime": "PostgreSQL 17",
+  "language": "sql",
+  "profile": "postgres",
+  "questionKeys": ["Q695", "Q700"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "artifacts": ["plan.json"],
+  "image": "fel-task-postgres:1",
+  "checkCommand": ["bash", "/opt/harness/run.sh"],
+  "editableFiles": ["solution.sql"],
+  "timeoutMs": 30000,
+  "memoryMb": 768,
+  "cpus": 1,
+  "declaredTests": [
+    "creates the low-selectivity status index",
+    "counts the common status rows",
+    "planner rejects the low-selectivity index"
+  ]
+}

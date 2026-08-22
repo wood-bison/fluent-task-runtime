@@ -1,0 +1,29 @@
+{
+  "images": [
+    {
+      "image": "fel-task-node:1",
+      "context": "internals/tasks/images/node",
+      "sourceFiles": ["Dockerfile", "harness/run.js"]
+    },
+    {
+      "image": "fel-task-postgres:1",
+      "context": "internals/tasks/images/postgres",
+      "sourceFiles": ["Dockerfile", "harness/run.sh"]
+    },
+    {
+      "image": "fel-task-dotnet:1",
+      "context": "internals/tasks/images/dotnet",
+      "sourceFiles": ["Dockerfile", "harness/run.sh"]
+    },
+    {
+      "image": "fel-task-go:1",
+      "context": "internals/tasks/images/go",
+      "sourceFiles": ["Dockerfile", "harness/run.sh"]
+    },
+    {
+      "image": "fel-task-java:1",
+      "context": "internals/tasks/images/java",
+      "sourceFiles": ["Dockerfile", "harness/run.sh"]
+    }
+  ]
+}

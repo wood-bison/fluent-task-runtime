@@ -1,0 +1,24 @@
+{
+  "taskId": "node-cpu-bound-002",
+  "title": "CPU-bound request incident",
+  "summary": "Move expensive work off the event loop and make cancellation observable.",
+  "breadcrumb": ["Node.js runtime", "CPU and worker threads"],
+  "concepts": ["worker_threads", "Cancellation", "Event-loop responsiveness"],
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "questionKeys": ["Q775"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["cpu.js"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "returns the worker result",
+    "does not block the caller while work is running",
+    "honours AbortSignal cancellation",
+    "cleans up a worker after completion"
+  ]
+}

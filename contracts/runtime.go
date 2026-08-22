@@ -38,14 +38,20 @@ type Profiles struct {
 // only: starter files and hidden tests stay in the pinned OCI image until the
 // sandbox execution gate is closed.
 type Task struct {
-	ID          string `json:"taskId"`
-	Revision    int    `json:"revision"`
-	Profile     string `json:"profile"`
-	Runtime     string `json:"runtime"`
-	Image       string `json:"image"`
-	Status      string `json:"status"`
-	Network     string `json:"network"`
-	HiddenTests bool   `json:"hiddenTests"`
+	ID            string   `json:"taskId"`
+	Revision      int      `json:"revision"`
+	Profile       string   `json:"profile"`
+	Runtime       string   `json:"runtime"`
+	Image         string   `json:"image"`
+	Status        string   `json:"status"`
+	Network       string   `json:"network"`
+	HiddenTests   bool     `json:"hiddenTests"`
+	CheckCommand  []string `json:"checkCommand,omitempty"`
+	EditableFiles []string `json:"editableFiles,omitempty"`
+	TimeoutMS     int      `json:"timeoutMs,omitempty"`
+	MemoryMB      int      `json:"memoryMb,omitempty"`
+	CPUs          float64  `json:"cpus,omitempty"`
+	Artifacts     []string `json:"artifacts,omitempty"`
 }
 
 type Tasks struct {
@@ -66,4 +72,33 @@ type RunRequest struct {
 	Files        map[string]string `json:"files"`
 	Locale       string            `json:"locale"`
 	Correlation  string            `json:"correlationId"`
+}
+
+type TestResult struct {
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Message  string `json:"message,omitempty"`
+	Output   string `json:"output,omitempty"`
+	TestCode string `json:"test_code,omitempty"`
+}
+
+type TestResults struct {
+	Version int          `json:"version"`
+	Status  string       `json:"status"`
+	Message string       `json:"message,omitempty"`
+	Tests   []TestResult `json:"tests,omitempty"`
+}
+
+// RunResponse mirrors the Lab task-run envelope. The nested results document
+// stays compatible with the adopted Exercism runner protocol; the runtime
+// adds only correlation and bounded process diagnostics around it.
+type RunResponse struct {
+	ContractVersion string            `json:"contractVersion"`
+	Results         TestResults       `json:"results"`
+	CorrelationID   string            `json:"correlationId"`
+	DurationMS      float64           `json:"durationMs"`
+	ExitCode        *int              `json:"exitCode"`
+	Stdout          string            `json:"stdout"`
+	Stderr          string            `json:"stderr"`
+	Artifacts       map[string]string `json:"artifacts,omitempty"`
 }

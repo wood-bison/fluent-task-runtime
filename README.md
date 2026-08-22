@@ -2,32 +2,34 @@
 
 Reusable, task-oriented execution boundary for Fluent products.
 
-This repository is intentionally starting as a contract-first vertical slice.
-It does not accept arbitrary source code and it does not pretend that a task is
-ready merely because a language profile exists. The engine will execute an
+This repository is the independent execution boundary for Fluent products. It
+does not accept arbitrary source code and it does not pretend that a task is
+ready merely because a language profile exists. The engine executes an
 immutable task revision through a pinned OCI profile, hidden-test harness and a
 bounded result contract.
 
 ## Current gate
 
-R2 is the active gate from the Lab migration plan:
+The current gate from the Lab migration plan is a deliberately small R3 slice:
 
 - Go HTTP control plane boots locally;
 - `/v1/health/live` and `/v1/health/ready` are explicit;
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
 - `/v1/tasks` exposes the 14 pinned task-revision descriptors (nine Node.js,
-  one .NET, two PostgreSQL, one Go and one Java); `status=declared` means the
-  image and hidden-test harness are registered, not that a run is yet open;
-- `/v1/runs` is deliberately not advertised as executable until the sandbox
-  adapter and task-pack revisions land;
+  one .NET, two PostgreSQL, one Go and one Java); `status=released` is currently
+  limited to the `fluent-calculator@1` Node task, while all other revisions stay
+  `declared` until their harness proof lands;
+- `/v1/runs` executes a released revision through Docker with no network,
+  bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
+  versioned result envelope;
 - Jaeger is available in the local Compose profile on a unique port.
 - The image build is architecture-portable: Compose supplies BuildKit's
   `TARGETARCH` and the binary listens on `RUNTIME_PORT` (default `48227`).
 
-The next gate adds the Docker-backed harness and dual-run evidence. Until then,
-a caller receives a truthful `runtime_not_ready` response rather than a fake
-pass or a browser-owned verdict.
+The next gate adds dual-run evidence for every profile and a dedicated remote
+sandbox provider. Until a revision is released, callers receive a truthful
+`runtime_not_ready` response rather than a fake pass or a browser-owned verdict.
 
 ## Boundaries
 
@@ -50,5 +52,12 @@ Compose adds Jaeger at <http://127.0.0.1:56687>:
 docker compose -f deploy/compose/compose.yaml up -d
 ```
 
-No learner source, credentials, Docker socket or host filesystem is mounted by
-this contract-first slice.
+The local Compose execution profile mounts the Docker socket only to launch
+disposable task containers; this is intentionally a development boundary. A
+production deployment must put the sandbox behind a dedicated worker service
+instead of granting the control plane a host socket.
+
+For a local nested-container smoke, set `RUNTIME_HOST_WORK_ROOT` in `.env` to
+an absolute disposable directory in this checkout. The runtime and Docker
+daemon must see the same path; otherwise the daemon would mount an empty path
+and the hidden-test harness would fail closed.

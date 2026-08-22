@@ -1,12 +1,14 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/wood-bison/fluent-task-runtime/contracts"
 	"github.com/wood-bison/fluent-task-runtime/internal/engine"
 )
 
@@ -54,12 +56,45 @@ func TestHealthAndProfiles(t *testing.T) {
 func TestRunRefusesBeforeExecutionGate(t *testing.T) {
 	handler := NewServer(engine.NewCatalogue())
 	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodPost, "/v1/runs", strings.NewReader(`{"taskId":"go.rate-limiter.001","taskRevision":1}`))
+	request := httptest.NewRequest(http.MethodPost, "/v1/runs", strings.NewReader(`{"taskId":"go-rate-limiter-001","taskRevision":1}`))
 	handler.ServeHTTP(recorder, request)
 	if recorder.Code != http.StatusNotImplemented {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusNotImplemented)
 	}
 	if !strings.Contains(recorder.Body.String(), `"code":"runtime_not_ready"`) {
+		t.Fatalf("body = %s", recorder.Body.String())
+	}
+}
+
+type fakeExecutor struct {
+	called bool
+}
+
+func (f *fakeExecutor) Run(_ context.Context, request contracts.RunRequest) (contracts.RunResponse, error) {
+	f.called = true
+	zero := 0
+	return contracts.RunResponse{
+		ContractVersion: contracts.RunContractVersion,
+		CorrelationID:   request.Correlation,
+		ExitCode:        &zero,
+		Results: contracts.TestResults{
+			Version: 2,
+			Status:  "pass",
+			Tests:   []contracts.TestResult{{Name: "fake", Status: "pass"}},
+		},
+	}, nil
+}
+
+func TestRunDelegatesReleasedTaskToSandbox(t *testing.T) {
+	executor := &fakeExecutor{}
+	handler := NewServer(engine.NewCatalogue(), executor)
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/v1/runs", strings.NewReader(`{"taskId":"fluent-calculator","taskRevision":1,"files":{"calculator.js":"export function createCalculator(){ return { value: 0 }; }"},"locale":"en","correlationId":"run-123"}`))
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK || !executor.called {
+		t.Fatalf("status = %d, called = %v, body = %s", recorder.Code, executor.called, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"status":"pass"`) {
 		t.Fatalf("body = %s", recorder.Body.String())
 	}
 }

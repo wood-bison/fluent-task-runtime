@@ -1,0 +1,26 @@
+{
+  "taskId": "node-auth-015",
+  "title": "Password storage and the ownership check",
+  "summary": "Store a password verifier that survives a database leak, and stop a valid token from reading someone else's row.",
+  "breadcrumb": ["HTTP & security", "Authentication and authorization"],
+  "concepts": ["Password KDF and salt", "Timing-safe comparison", "Resource ownership"],
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "questionKeys": ["Q195", "Q416"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["auth.js"],
+  "timeoutMs": 25000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "never stores the password itself",
+    "gives two identical passwords different stored verifiers",
+    "verifies the right password and rejects the wrong one",
+    "compares the verifier without leaking length by early exit",
+    "authenticated is not authorized: another user's record is refused",
+    "an admin may read any record"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "taskId": "dotnet-cancellation-001",
+  "title": ".NET cancellation boundary",
+  "summary": "Keep async work cancellable so a request does not outlive its caller.",
+  "breadcrumb": [".NET runtime", "Tasks and lifetime"],
+  "concepts": ["CancellationToken", "Async lifetime", "Cooperative cancellation"],
+  "runtime": ".NET 10",
+  "language": "csharp",
+  "profile": "dotnet",
+  "questionKeys": ["Q937"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-dotnet:1",
+  "checkCommand": ["bash", "/opt/harness/run.sh"],
+  "editableFiles": ["cancellation.cs"],
+  "timeoutMs": 30000,
+  "memoryMb": 1536,
+  "cpus": 1,
+  "declaredTests": [
+    "returns the completed value",
+    "honours cancellation before completion"
+  ]
+}

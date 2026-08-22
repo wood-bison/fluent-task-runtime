@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -12,10 +13,15 @@ import (
 
 type Server struct {
 	catalogue *engine.Catalogue
+	executor  engine.RunExecutor
 }
 
-func NewServer(catalogue *engine.Catalogue) http.Handler {
-	server := &Server{catalogue: catalogue}
+func NewServer(catalogue *engine.Catalogue, executors ...engine.RunExecutor) http.Handler {
+	var executor engine.RunExecutor = engine.NewDockerExecutor(catalogue)
+	if len(executors) > 0 && executors[0] != nil {
+		executor = executors[0]
+	}
+	server := &Server{catalogue: catalogue, executor: executor}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/health/live", server.live)
 	mux.HandleFunc("GET /v1/health/ready", server.ready)
@@ -37,12 +43,16 @@ func (s *Server) live(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) ready(w http.ResponseWriter, _ *http.Request) {
+	sandbox := "not-configured"
+	if provider, ok := s.executor.(interface{ Ready(context.Context) string }); ok {
+		sandbox = provider.Ready(context.Background())
+	}
 	writeJSON(w, http.StatusOK, contracts.Health{
 		ContractVersion: contracts.HealthContractVersion,
 		Service:         "fluent-task-runtime",
 		State:           "ready",
 		Ready:           true,
-		Dependencies:    map[string]string{"catalogue": "ready", "sandbox": "not-configured"},
+		Dependencies:    map[string]string{"catalogue": "ready", "sandbox": sandbox},
 		CheckedAt:       time.Now().UTC(),
 	})
 }
@@ -65,10 +75,29 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "invalid_request", Message: "taskId and positive taskRevision are required", Retryable: false})
 		return
 	}
-	// No execution is exposed before R3. Returning a typed refusal keeps the
-	// boundary honest and prevents a UI from interpreting a placeholder as a
-	// learner verdict.
-	writeJSON(w, http.StatusNotImplemented, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "runtime_not_ready", Message: "task execution is not released until the profile and hidden-test harness gate closes", Retryable: false})
+	task, found := s.catalogue.Task(request.TaskID, request.TaskRevision)
+	if !found {
+		writeJSON(w, http.StatusNotFound, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "unknown_task", Message: "task revision is not in the runtime catalogue", Retryable: false})
+		return
+	}
+	if task.Status != "released" {
+		writeJSON(w, http.StatusNotImplemented, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "runtime_not_ready", Message: "task execution is not released for this revision", Retryable: false})
+		return
+	}
+	response, err := s.executor.Run(r.Context(), request)
+	if err != nil {
+		if execution, ok := err.(*engine.ExecutionError); ok {
+			status := execution.Status
+			if status == 0 {
+				status = http.StatusBadGateway
+			}
+			writeJSON(w, status, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: execution.Code, Message: execution.Message, Retryable: execution.Retryable})
+			return
+		}
+		writeJSON(w, http.StatusBadGateway, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "runner_failed", Message: "task execution failed", Retryable: false})
+		return
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func requestLog(next http.Handler) http.Handler {

@@ -6,11 +6,13 @@ COPY go.mod ./
 COPY contracts ./contracts
 COPY internal ./internal
 COPY cmd ./cmd
+COPY tasks ./tasks
 RUN test -n "$TARGETARCH" || (echo 'TARGETARCH is required for a reproducible image build' >&2 && exit 1)
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags='-s -w' -o /out/runtime ./cmd/runtime
 
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM docker:27-cli
 COPY --from=build /out/runtime /runtime
-USER nonroot:nonroot
+COPY --from=build /src/tasks /opt/tasks
+ENV RUNTIME_TASKS_ROOT=/opt/tasks
 EXPOSE 48227
 ENTRYPOINT ["/runtime"]

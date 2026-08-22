@@ -1,0 +1,27 @@
+{
+  "taskId": "deferred",
+  "title": "Deferred settlement",
+  "summary": "Build a Promise-compatible Deferred that can be settled outside its constructor.",
+  "breadcrumb": ["Workspace tasks", "Asynchronous JavaScript"],
+  "concepts": ["Promise resolution", "Thenable adoption", "Settlement invariants"],
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "questionKeys": ["C142", "Q777"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["deferred.js"],
+  "timeoutMs": 20000,
+  "memoryMb": 3072,
+  "cpus": 1,
+  "declaredTests": [
+    "starts pending",
+    "resolves with the settled value",
+    "rejects with the settled reason",
+    "adopts a thenable passed directly to resolve",
+    "chains a thenable returned from then",
+    "propagates an error to the next catch",
+    "ignores a second settle"
+  ]
+}

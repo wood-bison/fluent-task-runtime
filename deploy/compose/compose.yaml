@@ -9,9 +9,21 @@ services:
       - "48227:48227"
     environment:
       RUNTIME_PORT: "48227"
+      RUNTIME_EXECUTION_ENABLED: "true"
+      # Set this to the same absolute host path used as the bind source below
+      # when you want nested task containers to execute in local Compose.
+      RUNTIME_WORK_ROOT: "${RUNTIME_HOST_WORK_ROOT:-/runtime-work}"
     depends_on:
       jaeger:
         condition: service_started
+    # Local execution only: the runtime is the policy gate, while Docker is a
+    # disposable sandbox provider. Production should replace this socket with
+    # a dedicated sandbox service or remote worker boundary.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${RUNTIME_HOST_WORK_ROOT:-./.runtime-work}:${RUNTIME_HOST_WORK_ROOT:-/runtime-work}
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
     read_only: true
     security_opt:
       - no-new-privileges:true

@@ -1,0 +1,26 @@
+{
+  "taskId": "pg-locks-016",
+  "title": "A queue in Postgres two workers can share",
+  "summary": "Claim jobs so concurrent workers never take the same row and never block behind each other.",
+  "breadcrumb": ["PostgreSQL depth", "Locks and concurrency"],
+  "concepts": ["FOR UPDATE SKIP LOCKED", "Row-level locks", "Atomic claim"],
+  "runtime": "PostgreSQL 17",
+  "language": "sql",
+  "profile": "postgres",
+  "questionKeys": ["Q059"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "artifacts": ["claims.json"],
+  "image": "fel-task-postgres:1",
+  "checkCommand": ["bash", "/opt/harness/run.sh"],
+  "editableFiles": ["solution.sql"],
+  "timeoutMs": 30000,
+  "memoryMb": 768,
+  "cpus": 1,
+  "declaredTests": [
+    "defines the claim_jobs function",
+    "claims exactly the requested batch size",
+    "two concurrent workers never claim the same job",
+    "a locked row is skipped, not waited on",
+    "claimed jobs are marked running, not left pending"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "taskId": "go-rate-limiter-001",
+  "title": "Rate limiter in Go",
+  "summary": "Implement a deterministic token-bucket limiter with per-key isolation and monotonic refill.",
+  "breadcrumb": ["Go runtime", "Concurrency and resilience"],
+  "concepts": ["Token bucket", "Time-based refill", "Per-key state"],
+  "runtime": "Go 1.24",
+  "language": "go",
+  "profile": "go",
+  "questionKeys": ["Q901"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-go:1",
+  "checkCommand": ["bash", "/opt/harness/run.sh"],
+  "editableFiles": ["main.go"],
+  "timeoutMs": 30000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "allows requests inside the configured burst",
+    "refills tokens over elapsed time",
+    "isolates independent keys",
+    "rejects requests after the bucket is empty"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "taskId": "node-cache-014",
+  "title": "Cache-aside that survives a stampede",
+  "summary": "Serve from cache, collapse concurrent misses into one load, and invalidate on write instead of hoping the TTL is short enough.",
+  "breadcrumb": ["Production systems", "Caching and invalidation"],
+  "concepts": ["Cache-aside", "Single-flight", "Invalidation on write"],
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "questionKeys": ["Q206"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["cache.js"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "loads once and serves the rest from cache",
+    "collapses concurrent misses into a single load",
+    "expires an entry after its ttl",
+    "invalidates on write so the next read is fresh",
+    "does not cache a failed load"
+  ]
+}

@@ -1,0 +1,17 @@
+-- Write claim_jobs(worker text, batch integer) RETURNING the claimed rows.
+--
+-- It must, in ONE statement:
+--   * take the next `batch` pending jobs by id,
+--   * lock them so no other worker can take the same rows,
+--   * skip rows another worker already holds instead of waiting for them,
+--   * set status = 'running' and claimed_by = worker,
+--   * return the claimed ids.
+--
+-- Two workers running this at the same moment must produce disjoint sets and
+-- neither may block. A plain SELECT ... then UPDATE is the bug: between the
+-- two statements another worker reads the same rows.
+--
+-- CREATE OR REPLACE FUNCTION claim_jobs(worker text, batch integer)
+-- RETURNS TABLE (id bigint) AS $$
+--   ...
+-- $$ LANGUAGE sql;

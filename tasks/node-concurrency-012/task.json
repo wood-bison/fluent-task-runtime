@@ -1,0 +1,25 @@
+{
+  "taskId": "node-concurrency-012",
+  "title": "Bounded concurrency without losing order",
+  "summary": "Run many async jobs with a hard ceiling on how many are in flight, and return results in input order.",
+  "breadcrumb": ["Node.js runtime", "Concurrency and bounded work"],
+  "concepts": ["Bounded concurrency", "Worker pool", "Order preservation"],
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "questionKeys": ["Q1062"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fel-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["pool.js"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "returns results in input order",
+    "never exceeds the concurrency limit",
+    "starts the next job as soon as one finishes",
+    "reports which job failed without losing the others",
+    "handles an empty list and a limit larger than the list"
+  ]
+}

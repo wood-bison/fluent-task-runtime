@@ -1,0 +1,2 @@
+-- Create idx_orders_status here, then inspect why the planner rejects it for
+-- the common `paid` value.
