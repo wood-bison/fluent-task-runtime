@@ -1,0 +1,47 @@
+{
+  "verification": "fluent-task-runtime.release.v2",
+  "date": "2026-08-22",
+  "runtimeCommit": "pending",
+  "compose": {
+    "api": "http://127.0.0.1:48227",
+    "jaeger": "http://127.0.0.1:56687",
+    "health": "ready",
+    "sandbox": "ready",
+    "network": "none"
+  },
+  "catalogue": {
+    "total": 14,
+    "released": 14,
+    "declared": 0,
+    "profiles": {
+      "node": 9,
+      "dotnet": 1,
+      "postgres": 2,
+      "go": 1,
+      "java": 1
+    }
+  },
+  "smokes": [
+    { "taskId": "deferred", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 7 },
+    { "taskId": "fluent-calculator", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 6 },
+    { "taskId": "node-auth-015", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 6 },
+    { "taskId": "node-cache-014", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 5 },
+    { "taskId": "node-concurrency-012", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 5 },
+    { "taskId": "node-cpu-bound-002", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 4 },
+    { "taskId": "node-idempotency-013", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 5 },
+    { "taskId": "node-memory-004", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 5 },
+    { "taskId": "node-streams-003", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 4 },
+    { "taskId": "dotnet-cancellation-001", "revision": 1, "profile": "dotnet", "http": 200, "status": "pass", "tests": 2 },
+    { "taskId": "pg-indexes-008", "revision": 1, "profile": "postgres", "http": 200, "status": "pass", "tests": 3 },
+    { "taskId": "pg-locks-016", "revision": 1, "profile": "postgres", "http": 200, "status": "pass", "tests": 5 },
+    { "taskId": "go-rate-limiter-001", "revision": 1, "profile": "go", "http": 200, "status": "pass", "tests": 4 },
+    { "taskId": "java-rate-limiter-001", "revision": 1, "profile": "java", "http": 200, "status": "pass", "tests": 4 }
+  ],
+  "observability": {
+    "service": "fluent-task-runtime",
+    "requiredOperations": ["GET /v1/health/ready", "GET /v1/profiles", "GET /v1/tasks", "POST /v1/runs", "task.run"],
+    "correlationPrefix": "release-smoke-",
+    "jaegerChecked": true
+  },
+  "remainingGate": "R3 dual-run parity against the legacy runner and a production remote sandbox provider"
+}

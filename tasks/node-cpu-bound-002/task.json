@@ -1,5 +1,7 @@
 {
   "taskId": "node-cpu-bound-002",
+  "revision": 1,
+  "status": "released",
   "title": "CPU-bound request incident",
   "summary": "Move expensive work off the event loop and make cancellation observable.",
   "breadcrumb": ["Node.js runtime", "CPU and worker threads"],

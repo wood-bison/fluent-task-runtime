@@ -1,5 +1,7 @@
 {
   "taskId": "node-idempotency-013",
+  "revision": 1,
+  "status": "released",
   "title": "At-least-once delivery without doing the work twice",
   "summary": "Consume a queue that redelivers: dedupe by key, retry with a bound, and dead-letter what will never succeed.",
   "breadcrumb": ["Distributed workflows", "Message delivery semantics"],

@@ -1,5 +1,7 @@
 {
   "taskId": "node-auth-015",
+  "revision": 1,
+  "status": "released",
   "title": "Password storage and the ownership check",
   "summary": "Store a password verifier that survives a database leak, and stop a valid token from reading someone else's row.",
   "breadcrumb": ["HTTP & security", "Authentication and authorization"],

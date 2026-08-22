@@ -1,5 +1,7 @@
 {
   "taskId": "node-concurrency-012",
+  "revision": 1,
+  "status": "released",
   "title": "Bounded concurrency without losing order",
   "summary": "Run many async jobs with a hard ceiling on how many are in flight, and return results in input order.",
   "breadcrumb": ["Node.js runtime", "Concurrency and bounded work"],

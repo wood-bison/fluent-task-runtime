@@ -1,5 +1,7 @@
 {
   "taskId": "deferred",
+  "revision": 1,
+  "status": "released",
   "title": "Deferred settlement",
   "summary": "Build a Promise-compatible Deferred that can be settled outside its constructor.",
   "breadcrumb": ["Workspace tasks", "Asynchronous JavaScript"],

@@ -1,5 +1,7 @@
 {
   "taskId": "node-cache-014",
+  "revision": 1,
+  "status": "released",
   "title": "Cache-aside that survives a stampede",
   "summary": "Serve from cache, collapse concurrent misses into one load, and invalidate on write instead of hoping the TTL is short enough.",
   "breadcrumb": ["Production systems", "Caching and invalidation"],

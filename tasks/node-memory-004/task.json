@@ -1,5 +1,7 @@
 {
   "taskId": "node-memory-004",
+  "revision": 1,
+  "status": "released",
   "title": "Find the retained object",
   "summary": "Make ownership explicit so released values stop growing the live set.",
   "breadcrumb": ["Node.js runtime", "Memory and GC"],

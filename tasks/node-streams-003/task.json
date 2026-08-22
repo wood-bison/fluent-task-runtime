@@ -1,5 +1,7 @@
 {
   "taskId": "node-streams-003",
+  "revision": 1,
+  "status": "released",
   "title": "Backpressure under load",
   "summary": "Build a line-oriented Transform that respects stream flow and fails clearly on bad input.",
   "breadcrumb": ["Node.js runtime", "Streams and backpressure"],

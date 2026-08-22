@@ -1,5 +1,7 @@
 {
   "taskId": "pg-locks-016",
+  "revision": 1,
+  "status": "released",
   "user": "999:999",
   "title": "A queue in Postgres two workers can share",
   "summary": "Claim jobs so concurrent workers never take the same row and never block behind each other.",
