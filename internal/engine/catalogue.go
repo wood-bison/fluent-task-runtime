@@ -133,6 +133,7 @@ func fallbackTasks() []contracts.Task {
 		{ID: "node-idempotency-013", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "node-memory-004", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "node-streams-003", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "project-book-boundary-001", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "released", Network: "none", HiddenTests: true},
 		{ID: "dotnet-cancellation-001", Revision: 1, Profile: "dotnet", Runtime: ".NET 10", Image: "fluent-runtime-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "pg-indexes-008", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "pg-locks-016", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},

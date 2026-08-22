@@ -2,27 +2,27 @@
   "images": [
     {
       "image": "fluent-runtime-task-node:1",
-      "context": "internals/tasks/images/node",
+      "context": "task-images/node",
       "sourceFiles": ["Dockerfile", "harness/run.js"]
     },
     {
       "image": "fluent-runtime-task-postgres:1",
-      "context": "internals/tasks/images/postgres",
+      "context": "task-images/postgres",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     },
     {
       "image": "fluent-runtime-task-dotnet:1",
-      "context": "internals/tasks/images/dotnet",
+      "context": "task-images/dotnet",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     },
     {
       "image": "fluent-runtime-task-go:1",
-      "context": "internals/tasks/images/go",
+      "context": "task-images/go",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     },
     {
       "image": "fluent-runtime-task-java:1",
-      "context": "internals/tasks/images/java",
+      "context": "task-images/java",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     }
   ]

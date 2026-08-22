@@ -1,0 +1,25 @@
+{
+  "taskId": "project-book-boundary-001",
+  "revision": 1,
+  "status": "released",
+  "title": "Project book: server-owned boundary",
+  "summary": "Make the execution boundary explicit and keep the browser from owning a private invariant.",
+  "breadcrumb": ["Project books", "Architecture boundaries"],
+  "concepts": ["Server ownership", "Safe projections", "Invariant tests"],
+  "runtime": "Node.js 24",
+  "language": "typescript",
+  "profile": "node",
+  "questionKeys": ["CAP-01"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "image": "fluent-runtime-task-node:1",
+  "checkCommand": ["node", "--experimental-strip-types", "/opt/harness/run.js"],
+  "editableFiles": ["src/boundary.ts", "test/boundary.spec.ts"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "accepts a server-owned boundary",
+    "rejects a browser-owned boundary",
+    "rejects private content crossing the boundary"
+  ]
+}

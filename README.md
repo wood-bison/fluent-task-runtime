@@ -17,8 +17,8 @@ runtime slice:
 - `/v1/health/live` and `/v1/health/ready` are explicit;
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
-- `/v1/tasks` exposes the 14 pinned task-revision descriptors (nine Node.js,
-  one .NET, two PostgreSQL, one Go and one Java); all 14 revisions are now
+- `/v1/tasks` exposes the 15 pinned task-revision descriptors (ten Node.js,
+  one .NET, two PostgreSQL, one Go and one Java); all 15 revisions are now
   `released` after a real Docker-backed smoke for every descriptor. The
   profile catalogue remains explicit, so a future descriptor is `declared`
   until its own harness proof lands;
@@ -33,8 +33,11 @@ runtime slice:
   `TARGETARCH` and the binary listens on `RUNTIME_PORT` (default `48227`).
 
 The next gate adds dual-run evidence for every profile and a dedicated remote
-sandbox provider. Until a future revision is released, callers receive a
-truthful `runtime_not_ready` response rather than a fake pass or a
+sandbox provider. The first project-book task,
+`project-book-boundary-001@1`, is released and Docker-smoked; Lab still keeps
+its project-book release and Tier 1 gates closed until the corresponding
+evidence join is complete. Until a future revision is released, callers
+receive a truthful `runtime_not_ready` response rather than a fake pass or a
 browser-owned verdict.
 
 The release smoke is recorded in

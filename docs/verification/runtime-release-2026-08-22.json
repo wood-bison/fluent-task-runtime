@@ -11,11 +11,11 @@
     "imageNamespace": "fluent-runtime-task-*"
   },
   "catalogue": {
-    "total": 14,
-    "released": 14,
+    "total": 15,
+    "released": 15,
     "declared": 0,
     "profiles": {
-      "node": 9,
+      "node": 10,
       "dotnet": 1,
       "postgres": 2,
       "go": 1,
@@ -32,6 +32,7 @@
     { "taskId": "node-idempotency-013", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 5 },
     { "taskId": "node-memory-004", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 5 },
     { "taskId": "node-streams-003", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 4 },
+    { "taskId": "project-book-boundary-001", "revision": 1, "profile": "node", "http": 200, "status": "pass", "tests": 3 },
     { "taskId": "dotnet-cancellation-001", "revision": 1, "profile": "dotnet", "http": 200, "status": "pass", "tests": 2 },
     { "taskId": "pg-indexes-008", "revision": 1, "profile": "postgres", "http": 200, "status": "pass", "tests": 3 },
     { "taskId": "pg-locks-016", "revision": 1, "profile": "postgres", "http": 200, "status": "pass", "tests": 5 },
