@@ -1,7 +1,7 @@
 {
   "verification": "fluent-task-runtime.release.v2",
   "date": "2026-08-22",
-  "runtimeCommit": "f8a7a98",
+  "runtimeCommit": "c8295d2",
   "compose": {
     "api": "http://127.0.0.1:48227",
     "jaeger": "http://127.0.0.1:56687",
