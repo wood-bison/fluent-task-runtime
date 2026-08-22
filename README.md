@@ -19,6 +19,8 @@ R2 is the active gate from the Lab migration plan:
 - `/v1/runs` is deliberately not advertised as executable until the sandbox
   adapter and task-pack revisions land;
 - Jaeger is available in the local Compose profile on a unique port.
+- The image build is architecture-portable: Compose supplies BuildKit's
+  `TARGETARCH` and the binary listens on `RUNTIME_PORT` (default `48227`).
 
 The next gate adds one real task revision and a Docker-backed harness. Until
 then, a caller receives a truthful `runtime_not_ready` response rather than a

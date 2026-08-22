@@ -26,7 +26,9 @@ func (c *Catalogue) Profiles() contracts.Profiles {
 	result := contracts.Profiles{ContractVersion: c.profiles.ContractVersion, Profiles: make([]contracts.Profile, len(c.profiles.Profiles))}
 	copy(result.Profiles, c.profiles.Profiles)
 	for index := range result.Profiles {
-		result.Profiles[index].SupportedTasks = append([]string(nil), result.Profiles[index].SupportedTasks...)
+		tasks := result.Profiles[index].SupportedTasks
+		result.Profiles[index].SupportedTasks = make([]string, len(tasks))
+		copy(result.Profiles[index].SupportedTasks, tasks)
 	}
 	return result
 }

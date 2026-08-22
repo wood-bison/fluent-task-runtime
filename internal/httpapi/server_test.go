@@ -27,7 +27,8 @@ func TestHealthAndProfiles(t *testing.T) {
 	handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/profiles", nil))
 	var body struct {
 		Profiles []struct {
-			ID string `json:"id"`
+			ID             string   `json:"id"`
+			SupportedTasks []string `json:"supportedTasks"`
 		} `json:"profiles"`
 	}
 	if err := json.Unmarshal(recorder.Body.Bytes(), &body); err != nil {
@@ -35,6 +36,9 @@ func TestHealthAndProfiles(t *testing.T) {
 	}
 	if len(body.Profiles) != 5 || body.Profiles[0].ID != "node" || body.Profiles[4].ID != "java" {
 		t.Fatalf("unexpected profile catalogue: %#v", body.Profiles)
+	}
+	if body.Profiles[0].SupportedTasks == nil {
+		t.Fatal("profile supportedTasks must be an empty array, not null")
 	}
 }
 
