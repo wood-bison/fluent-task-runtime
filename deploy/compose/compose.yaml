@@ -1,0 +1,24 @@
+name: fluent-task-runtime
+
+services:
+  runtime:
+    build:
+      context: ../..
+      dockerfile: deploy/compose/Dockerfile
+    ports:
+      - "48227:48227"
+    environment:
+      RUNTIME_PORT: "48227"
+    depends_on:
+      jaeger:
+        condition: service_started
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.76
+    ports:
+      - "56687:16686"
+      - "14317:4317"
+      - "14318:4318"
