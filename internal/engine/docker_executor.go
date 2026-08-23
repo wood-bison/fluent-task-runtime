@@ -47,9 +47,6 @@ type DockerExecutor struct {
 }
 
 func (e *DockerExecutor) Ready(parent context.Context) string {
-	if strings.EqualFold(strings.TrimSpace(os.Getenv("RUNTIME_EXECUTION_ENABLED")), "false") {
-		return "disabled"
-	}
 	ctx, cancel := context.WithTimeout(parent, 750*time.Millisecond)
 	defer cancel()
 	if err := exec.CommandContext(ctx, e.docker, "version", "--format", "{{.Server.Version}}").Run(); err != nil {
@@ -67,9 +64,6 @@ func NewDockerExecutor(catalogue *Catalogue) *DockerExecutor {
 }
 
 func (e *DockerExecutor) Run(parent context.Context, request contracts.RunRequest) (contracts.RunResponse, error) {
-	if strings.EqualFold(strings.TrimSpace(os.Getenv("RUNTIME_EXECUTION_ENABLED")), "false") {
-		return contracts.RunResponse{}, &ExecutionError{Code: "runtime_not_ready", Message: "sandbox execution is disabled by operator configuration", Status: 501, Retryable: false}
-	}
 	task, ok := e.catalogue.Task(request.TaskID, request.TaskRevision)
 	if !ok {
 		return contracts.RunResponse{}, &ExecutionError{Code: "unknown_task", Message: fmt.Sprintf("task %q revision %d is not in the runtime catalogue", request.TaskID, request.TaskRevision), Status: 404}
@@ -120,7 +114,7 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 
 	timeout := time.Duration(task.TimeoutMS) * time.Millisecond
 	if timeout <= 0 || timeout > 120*time.Second {
-		timeout = 30 * time.Second
+		return contracts.RunResponse{}, &ExecutionError{Code: "invalid_task_limits", Message: fmt.Sprintf("task %q declares an invalid timeout", request.TaskID), Status: 500, Retryable: false}
 	}
 	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
@@ -181,7 +175,7 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 
 func (e *DockerExecutor) prepareTask(task contracts.Task, inputDir, hiddenDir string, files map[string]string) error {
 	taskDir := filepath.Join(e.tasksRoot, task.ID)
-	if err := copyDirectory(filepath.Join(taskDir, "starter"), inputDir); err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err := copyDirectory(filepath.Join(taskDir, "starter"), inputDir); err != nil {
 		return err
 	}
 	for name, content := range files {
@@ -193,7 +187,7 @@ func (e *DockerExecutor) prepareTask(task contracts.Task, inputDir, hiddenDir st
 			return err
 		}
 	}
-	if err := copyDirectory(filepath.Join(taskDir, "tests"), filepath.Join(hiddenDir, "tests")); err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err := copyDirectory(filepath.Join(taskDir, "tests"), filepath.Join(hiddenDir, "tests")); err != nil {
 		return err
 	}
 	// Authored tests keep their relative imports (for example
@@ -208,17 +202,13 @@ func (e *DockerExecutor) prepareTask(task contracts.Task, inputDir, hiddenDir st
 
 func dockerArgs(task contracts.Task, inputDir, hiddenDir, outputDir, correlationID string) []string {
 	memory := task.MemoryMB
-	if memory <= 0 {
-		memory = 512
-	}
 	cpus := task.CPUs
-	if cpus <= 0 {
-		cpus = 1
+	if memory <= 0 || cpus <= 0 {
+		panic("task limits must be validated before dockerArgs")
 	}
-	// Keep runtime container names separate from Fluent Lab's compatibility
-	// runner. Both services may be smoke-tested at once on the same Docker
-	// daemon; a shared prefix makes accidental cleanup and name collisions too
-	// easy to miss.
+	// Keep task container names in a dedicated namespace. Lab and runtime may
+	// be smoke-tested on the same Docker daemon; explicit names prevent cleanup
+	// and collision mistakes.
 	name := "fluent-runtime-task-" + safeToken(task.ID) + "-" + safeToken(correlationID)
 	args := []string{"run", "--rm", "--name", name, "--pull", "never", "--network", "none", "--memory", fmt.Sprintf("%dm", memory), "--memory-swap", fmt.Sprintf("%dm", memory), "--cpus", fmt.Sprintf("%g", cpus), "--pids-limit", "256", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=128m", "-v", inputDir + ":/solution:ro", "-v", hiddenDir + ":/hidden-tests:ro", "-v", outputDir + ":/output", task.Image}
 	if task.User != "" {

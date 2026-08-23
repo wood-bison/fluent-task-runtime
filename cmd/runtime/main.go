@@ -29,7 +29,11 @@ func main() {
 		port = "48227"
 	}
 	address := ":" + port
-	server := &http.Server{Addr: address, Handler: httpapi.NewServer(engine.NewCatalogue())}
+	catalogue, err := engine.NewCatalogue()
+	if err != nil {
+		log.Fatalf("load task catalogue: %v", err)
+	}
+	server := &http.Server{Addr: address, Handler: httpapi.NewServer(catalogue)}
 	log.Printf("fluent-task-runtime listening on %s", address)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)

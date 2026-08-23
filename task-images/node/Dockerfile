@@ -1,6 +1,6 @@
 # The Node image every code-workspace task in this sub-project runs against.
 # Node 24 to match the plan's baseline (ADR-0006), independent of whatever
-# Node version the host running the runner-service happens to have.
+# Pin the toolchain inside the task image; the host toolchain is irrelevant.
 FROM node:24-slim
 
 RUN mkdir -p /opt/harness

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,8 +13,19 @@ import (
 	"github.com/wood-bison/fluent-task-runtime/internal/engine"
 )
 
+func testCatalogue(t *testing.T) *engine.Catalogue {
+	t.Helper()
+	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	catalogue, err := engine.NewCatalogue()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return catalogue
+}
+
 func TestHealthAndProfiles(t *testing.T) {
-	handler := NewServer(engine.NewCatalogue())
+	catalogue := testCatalogue(t)
+	handler := NewServer(catalogue)
 	for _, path := range []string{"/v1/health/live", "/v1/health/ready", "/v1/profiles", "/v1/tasks"} {
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
@@ -53,19 +65,6 @@ func TestHealthAndProfiles(t *testing.T) {
 	}
 }
 
-func TestRunRefusesBeforeExecutionGate(t *testing.T) {
-	handler := NewServer(engine.NewCatalogue())
-	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodPost, "/v1/runs", strings.NewReader(`{"taskId":"go-rate-limiter-001","taskRevision":1}`))
-	handler.ServeHTTP(recorder, request)
-	if recorder.Code != http.StatusNotImplemented {
-		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusNotImplemented)
-	}
-	if !strings.Contains(recorder.Body.String(), `"code":"runtime_not_ready"`) {
-		t.Fatalf("body = %s", recorder.Body.String())
-	}
-}
-
 type fakeExecutor struct {
 	called bool
 }
@@ -87,7 +86,8 @@ func (f *fakeExecutor) Run(_ context.Context, request contracts.RunRequest) (con
 
 func TestRunDelegatesReleasedTaskToSandbox(t *testing.T) {
 	executor := &fakeExecutor{}
-	handler := NewServer(engine.NewCatalogue(), executor)
+	catalogue := testCatalogue(t)
+	handler := NewServer(catalogue, executor)
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodPost, "/v1/runs", strings.NewReader(`{"taskId":"fluent-calculator","taskRevision":1,"files":{"calculator.js":"export function createCalculator(){ return { value: 0 }; }"},"locale":"en","correlationId":"run-123"}`))
 	handler.ServeHTTP(recorder, request)

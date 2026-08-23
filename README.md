@@ -69,9 +69,8 @@ docker build -t fluent-runtime-task-java:1 task-images/java
 docker compose -f deploy/compose/compose.yaml up -d
 ```
 
-The `fluent-runtime-task-*` image namespace is intentional: Lab's legacy
-compatibility runner owns a separate `fel-task-*` namespace, so rebuilding Lab
-cannot silently replace a runtime sandbox image.
+The `fluent-runtime-task-*` image namespace is dedicated to this runtime, so
+rebuilding the Lab cannot silently replace a task sandbox image.
 
 The Compose profile sends OTLP/gRPC to Jaeger's `4317` receiver. Verify that
 the service is receiving traces after a smoke run:

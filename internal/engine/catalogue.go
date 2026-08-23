@@ -2,6 +2,7 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -19,9 +20,12 @@ type Catalogue struct {
 	tasksRoot string
 }
 
-func NewCatalogue() *Catalogue {
+func NewCatalogue() (*Catalogue, error) {
 	tasksRoot := defaultTasksRoot()
-	tasks := loadTasks(tasksRoot)
+	tasks, err := loadTasks(tasksRoot)
+	if err != nil {
+		return nil, err
+	}
 	profiles := []contracts.Profile{
 		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
 		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 10", Image: "fluent-runtime-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
@@ -45,17 +49,12 @@ func NewCatalogue() *Catalogue {
 	return &Catalogue{tasksRoot: tasksRoot, profiles: contracts.Profiles{
 		ContractVersion: contracts.ProfileContractVersion,
 		Profiles:        profiles,
-	}, tasks: contracts.Tasks{ContractVersion: contracts.TaskContractVersion, Tasks: tasks}}
+	}, tasks: contracts.Tasks{ContractVersion: contracts.TaskContractVersion, Tasks: tasks}}, nil
 }
 
 func defaultTasksRoot() string {
 	if configured := os.Getenv("RUNTIME_TASKS_ROOT"); configured != "" {
 		return configured
-	}
-	for _, candidate := range []string{"/opt/tasks", "tasks", filepath.Join("..", "tasks")} {
-		if entries, err := os.ReadDir(candidate); err == nil && len(entries) > 0 {
-			return candidate
-		}
 	}
 	return "tasks"
 }
@@ -76,10 +75,10 @@ type taskDescriptor struct {
 	Artifacts     []string `json:"artifacts"`
 }
 
-func loadTasks(root string) []contracts.Task {
+func loadTasks(root string) ([]contracts.Task, error) {
 	entries, err := os.ReadDir(root)
 	if err != nil {
-		return fallbackTasks()
+		return nil, fmt.Errorf("read task catalogue %q: %w", root, err)
 	}
 	ids := make([]string, 0, len(entries))
 	for _, entry := range entries {
@@ -93,16 +92,22 @@ func loadTasks(root string) []contracts.Task {
 		path := filepath.Join(root, id, "task.json")
 		body, readErr := os.ReadFile(path)
 		if readErr != nil {
-			continue
+			return nil, fmt.Errorf("read task descriptor %q: %w", path, readErr)
 		}
 		var descriptor taskDescriptor
 		if decodeErr := json.Unmarshal(body, &descriptor); decodeErr != nil || descriptor.TaskID != id {
-			continue
+			if decodeErr != nil {
+				return nil, fmt.Errorf("decode task descriptor %q: %w", path, decodeErr)
+			}
+			return nil, fmt.Errorf("task descriptor %q has taskId %q", path, descriptor.TaskID)
+		}
+		if descriptor.Revision < 1 {
+			return nil, fmt.Errorf("task descriptor %q has invalid revision %d", path, descriptor.Revision)
+		}
+		if descriptor.TimeoutMS <= 0 || descriptor.MemoryMB <= 0 || descriptor.CPUs <= 0 {
+			return nil, fmt.Errorf("task descriptor %q must declare positive timeout, memory, and cpu limits", path)
 		}
 		revision := descriptor.Revision
-		if revision < 1 {
-			revision = 1
-		}
 		status := "declared"
 		if strings.EqualFold(strings.TrimSpace(descriptor.Status), "released") {
 			status = "released"
@@ -117,29 +122,9 @@ func loadTasks(root string) []contracts.Task {
 		})
 	}
 	if len(tasks) == 0 {
-		return fallbackTasks()
+		return nil, fmt.Errorf("task catalogue %q is empty", root)
 	}
-	return tasks
-}
-
-func fallbackTasks() []contracts.Task {
-	return []contracts.Task{
-		{ID: "deferred", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "fluent-calculator", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "released", Network: "none", HiddenTests: true},
-		{ID: "node-auth-015", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-cache-014", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-concurrency-012", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-cpu-bound-002", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-idempotency-013", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-memory-004", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "node-streams-003", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "project-book-boundary-001", Revision: 1, Profile: "node", Runtime: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "released", Network: "none", HiddenTests: true},
-		{ID: "dotnet-cancellation-001", Revision: 1, Profile: "dotnet", Runtime: ".NET 10", Image: "fluent-runtime-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "pg-indexes-008", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "pg-locks-016", Revision: 1, Profile: "postgres", Runtime: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "go-rate-limiter-001", Revision: 1, Profile: "go", Runtime: "Go 1.24", Image: "fluent-runtime-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "java-rate-limiter-001", Revision: 1, Profile: "java", Runtime: "Java 21", Image: "fluent-runtime-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
-	}
+	return tasks, nil
 }
 
 func (c *Catalogue) Tasks() contracts.Tasks {

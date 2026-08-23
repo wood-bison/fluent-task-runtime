@@ -9,7 +9,6 @@ services:
       - "48227:48227"
     environment:
       RUNTIME_PORT: "48227"
-      RUNTIME_EXECUTION_ENABLED: "true"
       OTEL_SERVICE_NAME: fluent-task-runtime
       OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
