@@ -1,0 +1,26 @@
+{
+  "taskId": "node-event-loop-001",
+  "revision": 1,
+  "status": "released",
+  "title": "Node.js Event Loop: prediction to evidence",
+  "summary": "Run the published event-loop challenge in a controlled Node process and retain its measured trace.",
+  "breadcrumb": ["Node.js runtime", "Event loop ordering"],
+  "concepts": ["Call stack", "process.nextTick", "Promise microtasks", "libuv timers"],
+  "questionKeys": ["C009"],
+  "questionReleaseId": "question-release-0dd14cc814fba1c7",
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "image": "fluent-runtime-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["index.js"],
+  "artifacts": ["trace.json"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "runs the submitted challenge",
+    "matches one published event-loop ordering",
+    "records a non-empty measured trace"
+  ]
+}

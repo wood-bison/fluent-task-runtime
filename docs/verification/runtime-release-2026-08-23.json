@@ -1,0 +1,60 @@
+{
+  "verification": "fluent-task-runtime.release-smoke.v2",
+  "capturedAt": "2026-08-23T12:47:31Z",
+  "source": {
+    "repository": "fluent-task-runtime",
+    "branch": "main",
+    "workingTreeBeforeReleaseCommit": "changed"
+  },
+  "catalogue": {
+    "total": 16,
+    "released": 16,
+    "byProfile": {
+      "node": 11,
+      "dotnet": 1,
+      "postgres": 2,
+      "go": 1,
+      "java": 1
+    },
+    "eventLoopTask": {
+      "taskId": "node-event-loop-001",
+      "revision": 1,
+      "status": "released",
+      "profile": "node",
+      "runtime": "Node.js 24",
+      "editableFiles": ["index.js"],
+      "artifacts": ["trace.json"],
+      "network": "none",
+      "hiddenTests": true
+    }
+  },
+  "health": {
+    "url": "http://127.0.0.1:48227/v1/health/ready",
+    "state": "ready",
+    "catalogue": "ready",
+    "sandbox": "ready"
+  },
+  "run": {
+    "correlationId": "r8-node-event-loop-2026-08-23",
+    "taskId": "node-event-loop-001",
+    "revision": 1,
+    "status": "pass",
+    "exitCode": 0,
+    "stdout": "start\nend\nnextTick\npromise\ntimeout",
+    "artifact": "trace.json",
+    "traceEventCount": 8
+  },
+  "observability": {
+    "jaegerUrl": "http://127.0.0.1:56687",
+    "traceId": "c66a454403553183d69ba92795b3bd89",
+    "operations": ["POST /v1/runs", "task.run"],
+    "correlationFound": true,
+    "taskFound": true
+  },
+  "invariants": {
+    "networkDisabled": true,
+    "browserOwnsNoVerdict": true,
+    "rawHiddenTestsExposed": false,
+    "deterministicResultContract": true
+  }
+}

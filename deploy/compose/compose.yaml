@@ -12,9 +12,11 @@ services:
       OTEL_SERVICE_NAME: fluent-task-runtime
       OTEL_EXPORTER_OTLP_ENDPOINT: jaeger:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      # Set this to the same absolute host path used as the bind source below
-      # when you want nested task containers to execute in local Compose.
-      RUNTIME_WORK_ROOT: "${RUNTIME_HOST_WORK_ROOT:-/runtime-work}"
+      # The nested Docker CLI asks the host daemon to mount this exact path.
+      # Keep the container path equal to the host path so `docker compose up`
+      # works without a hand-written .env file; override it only when running
+      # a second stack.
+      RUNTIME_WORK_ROOT: "${RUNTIME_HOST_WORK_ROOT:-${PWD}/.runtime-work}"
     depends_on:
       jaeger:
         condition: service_started
@@ -23,7 +25,7 @@ services:
     # a dedicated sandbox service or remote worker boundary.
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${RUNTIME_HOST_WORK_ROOT:-./.runtime-work}:${RUNTIME_HOST_WORK_ROOT:-/runtime-work}
+      - ${RUNTIME_HOST_WORK_ROOT:-${PWD}/.runtime-work}:${RUNTIME_HOST_WORK_ROOT:-${PWD}/.runtime-work}
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=256m
     read_only: true

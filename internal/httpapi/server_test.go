@@ -51,7 +51,7 @@ func TestHealthAndProfiles(t *testing.T) {
 	if len(body.Profiles) != 5 || body.Profiles[0].ID != "node" || body.Profiles[4].ID != "java" {
 		t.Fatalf("unexpected profile catalogue: %#v", body.Profiles)
 	}
-	if len(body.Profiles[0].SupportedTasks) != 10 {
+	if len(body.Profiles[0].SupportedTasks) != 11 {
 		t.Fatalf("unexpected Node task count: %#v", body.Profiles[0].SupportedTasks)
 	}
 

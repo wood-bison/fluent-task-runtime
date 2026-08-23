@@ -107,6 +107,14 @@ async function main() {
   const stream = run({ files: testFiles, concurrency: 1 });
 
   for await (const event of stream) {
+    if (event.type === 'test:stdout') {
+      // A task may deliberately expose a bounded learner-visible transcript
+      // (the event-loop task uses this for its prediction verdict). Keep the
+      // hidden test process itself private while forwarding only its explicit
+      // stdout channel into the runtime envelope.
+      process.stdout.write(event.data.message);
+      continue;
+    }
     if (event.type === 'test:stderr') {
       const key = event.data.file;
       const existing = stderrByFile.get(key) ?? '';
