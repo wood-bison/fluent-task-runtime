@@ -1,12 +1,19 @@
 name: fluent-task-runtime
 
+x-json-logging: &json-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   runtime:
     build:
       context: ../..
       dockerfile: deploy/compose/Dockerfile
     ports:
-      - "48227:48227"
+      - "127.0.0.1:${RT_HTTP_PORT:-48227}:48227"
+    logging: *json-logging
     environment:
       RUNTIME_PORT: "48227"
       OTEL_SERVICE_NAME: fluent-task-runtime
@@ -35,6 +42,7 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:1.76.0
     ports:
-      - "56687:16686"
-      - "14317:4317"
-      - "14318:4318"
+      - "127.0.0.1:${RT_JAEGER_UI_PORT:-56687}:16686"
+      - "127.0.0.1:${RT_OTLP_GRPC_PORT:-14317}:4317"
+      - "127.0.0.1:${RT_OTLP_HTTP_PORT:-14318}:4318"
+    logging: *json-logging
