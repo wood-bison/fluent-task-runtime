@@ -1,0 +1,96 @@
+{
+  "verification": "fluent-task-runtime.release.v3",
+  "capturedAt": "2026-08-24T07:18:00Z",
+  "runtimeCommit": "5422b3a",
+  "compose": {
+    "api": "http://127.0.0.1:48227",
+    "jaeger": "http://127.0.0.1:56687",
+    "health": "ready",
+    "sandbox": "ready",
+    "network": "none",
+    "imageNamespace": "fluent-runtime-task-*"
+  },
+  "questionBrainBinding": {
+    "releaseId": "question-release-15e032d7b732f8c1",
+    "catalogueTotal": 1392,
+    "catalogueWarnings": 0,
+    "releasedTasks": 18,
+    "invalidTaskRelations": 0
+  },
+  "catalogue": {
+    "total": 18,
+    "released": 18,
+    "byProfile": {
+      "node": 12,
+      "dotnet": 1,
+      "postgres": 3,
+      "go": 1,
+      "java": 1
+    },
+    "rateLimiterRevisions": [
+      {
+        "taskId": "node-rate-limiter-001",
+        "revision": 1,
+        "questionKeys": ["question.q315", "question.c024", "question.q444"],
+        "questionReleaseId": "question-release-15e032d7b732f8c1"
+      },
+      {
+        "taskId": "go-rate-limiter-001",
+        "revision": 1,
+        "questionKeys": ["question.q315", "question.c024", "question.q444"],
+        "questionReleaseId": "question-release-15e032d7b732f8c1"
+      },
+      {
+        "taskId": "java-rate-limiter-001",
+        "revision": 1,
+        "questionKeys": ["question.q315", "question.c024", "question.q444"],
+        "questionReleaseId": "question-release-15e032d7b732f8c1"
+      },
+      {
+        "taskId": "pg-rate-limiter-001",
+        "revision": 1,
+        "questionKeys": ["question.q315", "question.c024", "question.q444"],
+        "questionReleaseId": "question-release-15e032d7b732f8c1"
+      }
+    ]
+  },
+  "smokes": [
+    {
+      "taskId": "node-rate-limiter-001",
+      "revision": 1,
+      "profile": "node",
+      "http": 200,
+      "status": "pass",
+      "tests": 4,
+      "correlationId": "smoke-node-rate-2026-08-24"
+    },
+    {
+      "taskId": "pg-rate-limiter-001",
+      "revision": 1,
+      "profile": "postgres",
+      "http": 200,
+      "status": "pass",
+      "tests": 4,
+      "correlationId": "smoke-pg-rate-2026-08-24",
+      "artifact": "rate-limit.json"
+    }
+  ],
+  "observability": {
+    "service": "fluent-task-runtime",
+    "jaegerChecked": true,
+    "servicesSeen": ["fluent-task-runtime", "jaeger-all-in-one"],
+    "correlationsSeen": [
+      "smoke-node-rate-2026-08-24",
+      "smoke-pg-rate-2026-08-24"
+    ],
+    "operations": ["POST /v1/runs", "task.run"]
+  },
+  "invariants": {
+    "networkDisabled": true,
+    "browserOwnsNoVerdict": true,
+    "rawHiddenTestsExposed": false,
+    "deterministicResultContract": true,
+    "legacyQuestionKeysRejected": true
+  },
+  "remainingGate": "Lab package restart and browser verification of the relation audit projection"
+}
