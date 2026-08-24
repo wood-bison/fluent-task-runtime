@@ -9,6 +9,7 @@
   "runtime": "Go 1.24",
   "language": "go",
   "profile": "go",
+  "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
   "questionKeys": ["question.q315", "question.c024", "question.q444"],
   "questionReleaseId": "question-release-15e032d7b732f8c1",
   "image": "fluent-runtime-task-go:1",

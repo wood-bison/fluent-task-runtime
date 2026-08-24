@@ -9,6 +9,7 @@
   "runtime": "Node.js 24",
   "language": "javascript",
   "profile": "node",
+  "capabilityKeys": ["capability.runtime.node-cpu-bound-002"],
   "questionKeys": ["question.q775"],
   "questionReleaseId": "question-release-15e032d7b732f8c1",
   "image": "fluent-runtime-task-node:1",

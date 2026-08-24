@@ -11,6 +11,7 @@
   "runtime": "Node.js 24",
   "language": "javascript",
   "profile": "node",
+  "capabilityKeys": ["capability.runtime.node-event-loop-001"],
   "image": "fluent-runtime-task-node:1",
   "checkCommand": ["node", "/opt/harness/run.js"],
   "editableFiles": ["index.js"],

@@ -9,6 +9,7 @@
   "runtime": "Node.js 24",
   "language": "javascript",
   "profile": "node",
+  "capabilityKeys": ["capability.runtime.node-memory-004"],
   "questionKeys": ["question.q816"],
   "questionReleaseId": "question-release-15e032d7b732f8c1",
   "artifacts": ["retention.json"],

@@ -24,14 +24,15 @@ published Event Loop bridge:
   profile catalogue remains explicit, so a future descriptor is `declared`
   until its own harness proof lands;
 - every released task carries the exact Question Brain release ID. The
-  immutable revision identity is supplied by
-  [`releases/task-release-2026-08-24.json`](releases/task-release-2026-08-24.json):
+  active immutable revision identity is supplied by
+  [`releases/task-release-2026-08-24-qb-d550846f-i2.json`](releases/task-release-2026-08-24-qb-d550846f-i2.json):
   each entry pins `stableKey`, Question Brain `revisionId`, and
-  `contentHash`, and exposes `capabilityKeys`. The older `questionKeys`
-  property remains a read-only projection for Lab clients that have not yet
-  migrated; it is never used to replace a full binding. The runtime rejects
-  malformed or conflicting bindings at catalogue load, while Lab exposes a
-  server-side relation audit at `/api/runtime/relations`;
+  `contentHash`, and exposes explicit `capabilityKeys` for the executable
+  station crosswalk. The older `questionKeys` property remains a read-only
+  projection for Lab clients that have not yet migrated; it is never used to
+  replace a full binding. The runtime rejects malformed or conflicting
+  bindings at catalogue load, while Lab exposes a server-side relation audit
+  at `/api/runtime/relations`;
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
   versioned result envelope;
@@ -82,7 +83,7 @@ only when the runtime loads the immutable catalogue.
       "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
     }
   ],
-  "capabilityKeys": []
+  "capabilityKeys": ["capability.distributed-systems.rate-limiter"]
 }
 ```
 
@@ -90,21 +91,20 @@ The release ID is a content-release pin, not a live lookup. Updating a
 question creates a new Question Brain release and a new runtime release
 manifest; it must not silently change the evidence context of an old run. Set
 `RUNTIME_RELEASE_MANIFEST` to test a candidate manifest before publishing it.
-The checked-in manifest is a candidate fixture and is not loaded implicitly:
-the default runtime reports `manifest-not-configured` and exposes only the
-legacy descriptor projection with `runnable: false` until a release is
-explicitly selected. This compatibility view is non-runnable: readiness is
-degraded and both the workspace and run endpoints return `runtime_not_ready`.
-This is intentional while Question Brain is publishing a newer release. Set
-`RUNTIME_RELEASE_MANIFEST=/opt/releases/task-release-2026-08-24.json` in a
-controlled smoke to exercise this candidate; do not call it production-ready
-until its `questionReleaseId` matches the released Question Brain deployment.
+The local Compose stack selects
+`/opt/releases/task-release-2026-08-24-qb-d550846f-i2.json`, whose
+`questionReleaseId` matches the current Question Brain deployment. There is no
+implicit legacy fallback: without an explicit manifest the runtime reports
+`manifest-not-configured`, readiness is degraded, and workspace/run requests
+return `runtime_not_ready`.
 
 `GET /v1/tasks/summary` makes this state machine explicit. It returns
 `manifest-loaded` with the runtime and Question Brain release IDs when an
 overlay is selected, or `manifest-not-configured` when the runtime is serving
 compatibility descriptors. The response and each task include `runnable` so a
-client cannot mistake historical descriptors for an executable release.
+client cannot mistake historical descriptors for an executable release. The
+capability key is the only accepted join into Lab's station taxonomy; it is
+never inferred from a task title or breadcrumb.
 `GET /v1/tasks/{taskId}/workspace` returns the learner brief and starter files
 only once a release is selected; hidden tests and harness files never cross
 this API boundary. A released task without an authored `brief.md` is reported

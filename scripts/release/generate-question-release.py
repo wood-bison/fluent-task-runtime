@@ -4,7 +4,9 @@
 This is deliberately a small release tool rather than runtime code.  It reads
 the immutable task bindings from an existing manifest, resolves each stable
 key against Question Brain's answer-free ``/v1/release`` identity manifest,
-and writes a new manifest without changing task meaning or capability keys.
+and writes a new manifest.  Capability keys are read from the authored task
+descriptor when available so the executable station crosswalk is part of the
+same reviewed source as the task brief.
 The old manifest remains immutable history.
 """
 
@@ -29,6 +31,12 @@ def main() -> int:
     parser.add_argument("--source", required=True, type=Path, help="previous task release manifest")
     parser.add_argument("--question-brain", required=True, help="Question Brain base URL")
     parser.add_argument("--workspace", default="fluent-interview")
+    parser.add_argument(
+        "--tasks-root",
+        default=Path("tasks"),
+        type=Path,
+        help="authored task descriptor root used for capability keys",
+    )
     parser.add_argument("--release-id", required=True, help="new immutable runtime release id")
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
@@ -53,11 +61,17 @@ def main() -> int:
     tasks = []
     missing = []
     for task in source.get("tasks", []):
+        descriptor_path = args.tasks_root / task["taskId"] / "task.json"
+        descriptor = {}
+        if descriptor_path.is_file():
+            descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
         copied = {
             "taskId": task["taskId"],
             "revision": task["revision"],
             "questionBindings": [],
-            "capabilityKeys": list(task.get("capabilityKeys", [])),
+            "capabilityKeys": list(
+                descriptor.get("capabilityKeys", task.get("capabilityKeys", []))
+            ),
         }
         for binding in task.get("questionBindings", []):
             stable_key = binding.get("stableKey", "")

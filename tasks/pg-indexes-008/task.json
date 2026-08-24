@@ -10,6 +10,7 @@
   "runtime": "PostgreSQL 17",
   "language": "sql",
   "profile": "postgres",
+  "capabilityKeys": ["capability.data-postgresql.pg-indexes-008"],
   "questionKeys": ["question.q695", "question.q700"],
   "questionReleaseId": "question-release-15e032d7b732f8c1",
   "artifacts": ["plan.json"],

@@ -21,7 +21,7 @@ database or copying question prose into the runtime repository.
       "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
     }
   ],
-  "capabilityKeys": [],
+  "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
   "questionKeys": ["question.q315"]
 }
 ```
@@ -55,9 +55,11 @@ startup. This makes a release incomplete rather than allowing a partially
 bound catalogue into the API.
 
 The historical candidate points at `question-release-15e032d7b732f8c1` and is
-kept immutable for audit purposes. The current reconciled candidate is
-[`task-release-2026-08-24-qb-d550846f.json`](../../releases/task-release-2026-08-24-qb-d550846f.json),
-which pins `question-release-d550846f4743c4d3`. It is selected only through
+kept immutable for audit purposes. The reconciled candidate
+[`task-release-2026-08-24-qb-d550846f.json`](../../releases/task-release-2026-08-24-qb-d550846f.json)
+pins `question-release-d550846f4743c4d3`; the active I2 manifest
+[`task-release-2026-08-24-qb-d550846f-i2.json`](../../releases/task-release-2026-08-24-qb-d550846f-i2.json)
+adds the reviewed executable capability keys. It is selected only through
 `RUNTIME_RELEASE_MANIFEST`; no file is an implicit fallback. If Question Brain
 publishes a new release, generate another manifest, run the catalogue and
 relation checks, and select it through the deployment environment.
@@ -79,9 +81,17 @@ python3 scripts/release/generate-question-release.py \\
   --source releases/task-release-2026-08-24.json \\
   --question-brain http://127.0.0.1:48127 \\
   --workspace fluent-interview \\
+  --tasks-root tasks \\
   --release-id runtime-task-release-YYYY-MM-DD-qb-<release-suffix> \\
   --output releases/task-release-YYYY-MM-DD-qb-<release-suffix>.json
 ```
+
+The generator reads `capabilityKeys` from `tasks/<taskId>/task.json` and
+copies them into the immutable release. This keeps the task brief and its
+reviewed Lab-station join in one author-owned descriptor. A capability can be
+shared by multiple language revisions (for example, the Node.js, Go, Java and
+PostgreSQL rate-limiter tasks) without pretending that their source code is
+interchangeable.
 
 The runtime does not fetch Question Brain during a task run. Lab may fetch the
 referenced card for display, but it must verify the returned revision and hash
