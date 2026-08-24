@@ -1,0 +1,7 @@
+-- Implement:
+--   allow_request(client_id text, at timestamptz, max_requests integer,
+--                 window_seconds integer) RETURNS boolean
+--
+-- The decision must count only events in [at - window, at), insert the new
+-- event only when the request is allowed, and serialize competing calls for
+-- the same client. Keep the query index-friendly and deterministic.

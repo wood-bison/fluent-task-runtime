@@ -51,7 +51,7 @@ func TestHealthAndProfiles(t *testing.T) {
 	if len(body.Profiles) != 5 || body.Profiles[0].ID != "node" || body.Profiles[4].ID != "java" {
 		t.Fatalf("unexpected profile catalogue: %#v", body.Profiles)
 	}
-	if len(body.Profiles[0].SupportedTasks) != 11 {
+	if len(body.Profiles[0].SupportedTasks) != 12 {
 		t.Fatalf("unexpected Node task count: %#v", body.Profiles[0].SupportedTasks)
 	}
 
@@ -59,6 +59,9 @@ func TestHealthAndProfiles(t *testing.T) {
 	handler.ServeHTTP(tasksRecorder, httptest.NewRequest(http.MethodGet, "/v1/tasks", nil))
 	if tasksRecorder.Code != http.StatusOK || !strings.Contains(tasksRecorder.Body.String(), `"taskId":"go-rate-limiter-001"`) {
 		t.Fatalf("unexpected task catalogue: %d %s", tasksRecorder.Code, tasksRecorder.Body.String())
+	}
+	if !strings.Contains(tasksRecorder.Body.String(), `"questionReleaseId":"question-release-15e032d7b732f8c1"`) || !strings.Contains(tasksRecorder.Body.String(), `"question.c024"`) {
+		t.Fatalf("task catalogue did not expose canonical Question Brain bindings: %s", tasksRecorder.Body.String())
 	}
 	if body.Profiles[0].SupportedTasks == nil {
 		t.Fatal("profile supportedTasks must be an empty array, not null")

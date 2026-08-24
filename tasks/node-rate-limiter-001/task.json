@@ -1,0 +1,26 @@
+{
+  "taskId": "node-rate-limiter-001",
+  "revision": 1,
+  "status": "released",
+  "title": "Rate limiter in Node.js",
+  "summary": "Implement a deterministic per-key token bucket and make burst, refill, and isolation observable.",
+  "breadcrumb": ["Node.js runtime", "Resilience and bounded work"],
+  "concepts": ["Token bucket", "Time-based refill", "Per-key state"],
+  "runtime": "Node.js 24",
+  "language": "javascript",
+  "profile": "node",
+  "questionKeys": ["question.q315", "question.c024", "question.q444"],
+  "questionReleaseId": "question-release-15e032d7b732f8c1",
+  "image": "fluent-runtime-task-node:1",
+  "checkCommand": ["node", "/opt/harness/run.js"],
+  "editableFiles": ["rate-limiter.js"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "allows requests inside the configured burst",
+    "refills tokens over elapsed time",
+    "isolates independent keys",
+    "rejects requests after the bucket is empty"
+  ]
+}

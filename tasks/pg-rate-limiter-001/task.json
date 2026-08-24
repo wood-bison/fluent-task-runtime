@@ -1,0 +1,28 @@
+{
+  "taskId": "pg-rate-limiter-001",
+  "revision": 1,
+  "status": "released",
+  "user": "999:999",
+  "title": "Rate limiter in PostgreSQL",
+  "summary": "Build a database-backed sliding-window limiter with an atomic decision and query evidence.",
+  "breadcrumb": ["PostgreSQL depth", "Rate limiting and concurrency"],
+  "concepts": ["Sliding window", "Atomic decision", "Index-backed evidence"],
+  "runtime": "PostgreSQL 17",
+  "language": "sql",
+  "profile": "postgres",
+  "questionKeys": ["question.q315", "question.c024", "question.q444"],
+  "questionReleaseId": "question-release-15e032d7b732f8c1",
+  "artifacts": ["rate-limit.json"],
+  "image": "fluent-runtime-task-postgres:1",
+  "checkCommand": ["bash", "/opt/harness/run.sh"],
+  "editableFiles": ["solution.sql"],
+  "timeoutMs": 30000,
+  "memoryMb": 768,
+  "cpus": 1,
+  "declaredTests": [
+    "defines the allow_request function",
+    "denies a full window",
+    "allows a request after the window boundary",
+    "isolates independent clients"
+  ]
+}

@@ -53,6 +53,11 @@ type Task struct {
 	CPUs          float64  `json:"cpus,omitempty"`
 	User          string   `json:"user,omitempty"`
 	Artifacts     []string `json:"artifacts,omitempty"`
+	// QuestionKeys and QuestionReleaseID are the immutable binding from an
+	// executable task revision back to the canonical Question Brain release.
+	// They are metadata only: the runtime never owns or mutates question data.
+	QuestionKeys      []string `json:"questionKeys,omitempty"`
+	QuestionReleaseID string   `json:"questionReleaseId,omitempty"`
 }
 
 type Tasks struct {

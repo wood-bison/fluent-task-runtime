@@ -60,19 +60,21 @@ func defaultTasksRoot() string {
 }
 
 type taskDescriptor struct {
-	TaskID        string   `json:"taskId"`
-	Revision      int      `json:"revision"`
-	Status        string   `json:"status"`
-	Runtime       string   `json:"runtime"`
-	Profile       string   `json:"profile"`
-	Image         string   `json:"image"`
-	CheckCommand  []string `json:"checkCommand"`
-	EditableFiles []string `json:"editableFiles"`
-	TimeoutMS     int      `json:"timeoutMs"`
-	MemoryMB      int      `json:"memoryMb"`
-	CPUs          float64  `json:"cpus"`
-	User          string   `json:"user"`
-	Artifacts     []string `json:"artifacts"`
+	TaskID            string   `json:"taskId"`
+	Revision          int      `json:"revision"`
+	Status            string   `json:"status"`
+	Runtime           string   `json:"runtime"`
+	Profile           string   `json:"profile"`
+	Image             string   `json:"image"`
+	CheckCommand      []string `json:"checkCommand"`
+	EditableFiles     []string `json:"editableFiles"`
+	TimeoutMS         int      `json:"timeoutMs"`
+	MemoryMB          int      `json:"memoryMb"`
+	CPUs              float64  `json:"cpus"`
+	User              string   `json:"user"`
+	Artifacts         []string `json:"artifacts"`
+	QuestionKeys      []string `json:"questionKeys"`
+	QuestionReleaseID string   `json:"questionReleaseId"`
 }
 
 func loadTasks(root string) ([]contracts.Task, error) {
@@ -112,19 +114,75 @@ func loadTasks(root string) ([]contracts.Task, error) {
 		if strings.EqualFold(strings.TrimSpace(descriptor.Status), "released") {
 			status = "released"
 		}
+		questionKeys, bindingErr := validateQuestionBinding(descriptor.QuestionKeys, descriptor.QuestionReleaseID, status)
+		if bindingErr != nil {
+			return nil, fmt.Errorf("task descriptor %q: %w", path, bindingErr)
+		}
 		tasks = append(tasks, contracts.Task{
 			ID: id, Revision: revision, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
 			Image: descriptor.Image, Status: status, Network: "none", HiddenTests: true,
 			CheckCommand:  append([]string(nil), descriptor.CheckCommand...),
 			EditableFiles: append([]string(nil), descriptor.EditableFiles...),
 			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs, User: descriptor.User,
-			Artifacts: append([]string(nil), descriptor.Artifacts...),
+			Artifacts:    append([]string(nil), descriptor.Artifacts...),
+			QuestionKeys: questionKeys, QuestionReleaseID: descriptor.QuestionReleaseID,
 		})
 	}
 	if len(tasks) == 0 {
 		return nil, fmt.Errorf("task catalogue %q is empty", root)
 	}
 	return tasks, nil
+}
+
+func validateQuestionBinding(keys []string, releaseID, status string) ([]string, error) {
+	if status == "released" && len(keys) == 0 {
+		return nil, fmt.Errorf("released task must declare at least one questionKeys or capability binding")
+	}
+	if status == "released" && !isQuestionReleaseID(releaseID) {
+		return nil, fmt.Errorf("released task must declare a pinned questionReleaseId")
+	}
+	seen := make(map[string]struct{}, len(keys))
+	result := make([]string, 0, len(keys))
+	for _, key := range keys {
+		key = strings.TrimSpace(key)
+		if !isStableBindingKey(key) {
+			return nil, fmt.Errorf("invalid question binding %q; expected question.<key> or capability.<key>", key)
+		}
+		if _, exists := seen[key]; exists {
+			return nil, fmt.Errorf("duplicate question binding %q", key)
+		}
+		seen[key] = struct{}{}
+		result = append(result, key)
+	}
+	return result, nil
+}
+
+func isStableBindingKey(key string) bool {
+	parts := strings.SplitN(key, ".", 2)
+	if len(parts) != 2 || (parts[0] != "question" && parts[0] != "capability") {
+		return false
+	}
+	if len(parts[1]) < 2 || len(parts[1]) > 80 {
+		return false
+	}
+	for _, character := range parts[1] {
+		if (character < 'a' || character > 'z') && (character < '0' || character > '9') && character != '-' {
+			return false
+		}
+	}
+	return true
+}
+
+func isQuestionReleaseID(releaseID string) bool {
+	if !strings.HasPrefix(releaseID, "question-release-") || len(releaseID) != len("question-release-")+16 {
+		return false
+	}
+	for _, character := range releaseID[len("question-release-"):] {
+		if !(character >= '0' && character <= '9') && !(character >= 'a' && character <= 'f') {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *Catalogue) Tasks() contracts.Tasks {
@@ -134,6 +192,7 @@ func (c *Catalogue) Tasks() contracts.Tasks {
 		result.Tasks[index].CheckCommand = append([]string(nil), c.tasks.Tasks[index].CheckCommand...)
 		result.Tasks[index].EditableFiles = append([]string(nil), c.tasks.Tasks[index].EditableFiles...)
 		result.Tasks[index].Artifacts = append([]string(nil), c.tasks.Tasks[index].Artifacts...)
+		result.Tasks[index].QuestionKeys = append([]string(nil), c.tasks.Tasks[index].QuestionKeys...)
 	}
 	return result
 }

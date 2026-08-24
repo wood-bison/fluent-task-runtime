@@ -18,11 +18,15 @@ published Event Loop bridge:
 - `/v1/health/live` and `/v1/health/ready` are explicit;
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
-- `/v1/tasks` exposes 16 pinned task-revision descriptors (11 Node.js,
-  one .NET, two PostgreSQL, one Go and one Java); all 16 revisions are
+- `/v1/tasks` exposes 18 pinned task-revision descriptors (12 Node.js,
+  one .NET, three PostgreSQL, one Go and one Java); all 18 revisions are
   `released` after a real Docker-backed smoke for every descriptor. The
   profile catalogue remains explicit, so a future descriptor is `declared`
   until its own harness proof lands;
+- every released task carries canonical `question.*` or `capability.*` bindings
+  plus the exact Question Brain release ID. The runtime rejects legacy
+  `Q123`/`C123`/`CAP-01` bindings at catalogue load, while Lab exposes a
+  server-side relation audit at `/api/runtime/relations`;
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
   versioned result envelope;
