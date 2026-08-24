@@ -51,6 +51,7 @@ type QuestionBinding struct {
 type Task struct {
 	ID            string   `json:"taskId"`
 	Revision      int      `json:"revision"`
+	Language      string   `json:"language"`
 	Profile       string   `json:"profile"`
 	Runtime       string   `json:"runtime"`
 	Image         string   `json:"image"`
@@ -60,6 +61,7 @@ type Task struct {
 	HiddenTests   bool     `json:"hiddenTests"`
 	CheckCommand  []string `json:"checkCommand,omitempty"`
 	EditableFiles []string `json:"editableFiles,omitempty"`
+	DeclaredTests []string `json:"declaredTests,omitempty"`
 	TimeoutMS     int      `json:"timeoutMs,omitempty"`
 	MemoryMB      int      `json:"memoryMb,omitempty"`
 	CPUs          float64  `json:"cpus,omitempty"`
@@ -110,15 +112,17 @@ type TaskSummaryResponse struct {
 // TaskWorkspace contains only learner-visible task material. Hidden tests,
 // test harnesses, image names and execution commands are intentionally absent.
 type TaskWorkspace struct {
-	ContractVersion string            `json:"contractVersion"`
-	TaskID          string            `json:"taskId"`
-	Revision        int               `json:"revision"`
-	Status          string            `json:"status"`
-	Profile         string            `json:"profile"`
-	Runtime         string            `json:"runtime"`
-	Brief           string            `json:"brief"`
-	EditableFiles   []string          `json:"editableFiles"`
-	StarterFiles    map[string]string `json:"starterFiles"`
+	ContractVersion   string            `json:"contractVersion"`
+	TaskID            string            `json:"taskId"`
+	Revision          int               `json:"revision"`
+	Status            string            `json:"status"`
+	Language          string            `json:"language"`
+	Profile           string            `json:"profile"`
+	Runtime           string            `json:"runtime"`
+	Brief             string            `json:"brief"`
+	DeclaredTestCount int               `json:"declaredTestCount"`
+	EditableFiles     []string          `json:"editableFiles"`
+	StarterFiles      map[string]string `json:"starterFiles"`
 }
 
 type RuntimeError struct {

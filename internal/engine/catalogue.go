@@ -70,11 +70,13 @@ type taskDescriptor struct {
 	TaskID            string                      `json:"taskId"`
 	Revision          int                         `json:"revision"`
 	Status            string                      `json:"status"`
+	Language          string                      `json:"language"`
 	Runtime           string                      `json:"runtime"`
 	Profile           string                      `json:"profile"`
 	Image             string                      `json:"image"`
 	CheckCommand      []string                    `json:"checkCommand"`
 	EditableFiles     []string                    `json:"editableFiles"`
+	DeclaredTests     []string                    `json:"declaredTests"`
 	TimeoutMS         int                         `json:"timeoutMs"`
 	MemoryMB          int                         `json:"memoryMb"`
 	CPUs              float64                     `json:"cpus"`
@@ -178,10 +180,11 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 			return nil, fmt.Errorf("task descriptor %q: %w", path, bindingErr)
 		}
 		tasks = append(tasks, contracts.Task{
-			ID: id, Revision: revision, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
+			ID: id, Revision: revision, Language: descriptor.Language, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
 			Image: descriptor.Image, Status: status, Runnable: releaseManifest != nil && status == "released", Network: "none", HiddenTests: true,
 			CheckCommand:  append([]string(nil), descriptor.CheckCommand...),
 			EditableFiles: append([]string(nil), descriptor.EditableFiles...),
+			DeclaredTests: append([]string(nil), descriptor.DeclaredTests...),
 			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs, User: descriptor.User,
 			Artifacts:         append([]string(nil), descriptor.Artifacts...),
 			QuestionBindings:  questionBindings,
@@ -592,15 +595,17 @@ func (c *Catalogue) TaskWorkspace(id string, revision int) (contracts.TaskWorksp
 		return contracts.TaskWorkspace{}, fmt.Errorf("read task starter: %w", err)
 	}
 	return contracts.TaskWorkspace{
-		ContractVersion: contracts.WorkspaceContractVersion,
-		TaskID:          task.ID,
-		Revision:        task.Revision,
-		Status:          task.Status,
-		Profile:         task.Profile,
-		Runtime:         task.Runtime,
-		Brief:           string(brief),
-		EditableFiles:   append([]string(nil), task.EditableFiles...),
-		StarterFiles:    starterFiles,
+		ContractVersion:   contracts.WorkspaceContractVersion,
+		TaskID:            task.ID,
+		Revision:          task.Revision,
+		Status:            task.Status,
+		Language:          task.Language,
+		Profile:           task.Profile,
+		Runtime:           task.Runtime,
+		Brief:             string(brief),
+		DeclaredTestCount: len(task.DeclaredTests),
+		EditableFiles:     append([]string(nil), task.EditableFiles...),
+		StarterFiles:      starterFiles,
 	}, nil
 }
 
@@ -618,6 +623,7 @@ func readWorkspaceBounded(path string, limit int) ([]byte, error) {
 func cloneTask(task contracts.Task) contracts.Task {
 	task.CheckCommand = cloneStrings(task.CheckCommand)
 	task.EditableFiles = cloneStrings(task.EditableFiles)
+	task.DeclaredTests = cloneStrings(task.DeclaredTests)
 	task.Artifacts = cloneStrings(task.Artifacts)
 	task.QuestionBindings = cloneQuestionBindings(task.QuestionBindings)
 	task.QuestionKeys = cloneStrings(task.QuestionKeys)
