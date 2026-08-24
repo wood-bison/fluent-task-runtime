@@ -34,6 +34,15 @@ type Profiles struct {
 	Profiles        []Profile `json:"profiles"`
 }
 
+// QuestionBinding is the immutable content identity that a task revision was
+// authored and tested against. Question Brain owns the referenced content;
+// the runtime only carries the identity so a run can be audited later.
+type QuestionBinding struct {
+	StableKey   string `json:"stableKey"`
+	RevisionID  string `json:"revisionId"`
+	ContentHash string `json:"contentHash"`
+}
+
 // Task is an immutable task-revision descriptor. It is deliberately metadata
 // only: starter files and hidden tests stay in the pinned OCI image until the
 // sandbox execution gate is closed.
@@ -53,11 +62,16 @@ type Task struct {
 	CPUs          float64  `json:"cpus,omitempty"`
 	User          string   `json:"user,omitempty"`
 	Artifacts     []string `json:"artifacts,omitempty"`
-	// QuestionKeys and QuestionReleaseID are the immutable binding from an
-	// executable task revision back to the canonical Question Brain release.
-	// They are metadata only: the runtime never owns or mutates question data.
-	QuestionKeys      []string `json:"questionKeys,omitempty"`
-	QuestionReleaseID string   `json:"questionReleaseId,omitempty"`
+	// QuestionReleaseID, QuestionBindings and CapabilityKeys are immutable
+	// metadata from the executable task revision back to Question Brain. The
+	// runtime never owns or mutates question data.
+	QuestionReleaseID string            `json:"questionReleaseId,omitempty"`
+	QuestionBindings  []QuestionBinding `json:"questionBindings"`
+	CapabilityKeys    []string          `json:"capabilityKeys"`
+	// QuestionKeys is a deprecated compatibility projection for Lab clients
+	// that only understand the first binding contract. New integrations must
+	// use QuestionBindings so revision and content identity cannot be lost.
+	QuestionKeys []string `json:"questionKeys,omitempty"`
 }
 
 type Tasks struct {

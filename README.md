@@ -23,9 +23,14 @@ published Event Loop bridge:
   `released` after a real Docker-backed smoke for every descriptor. The
   profile catalogue remains explicit, so a future descriptor is `declared`
   until its own harness proof lands;
-- every released task carries canonical `question.*` or `capability.*` bindings
-  plus the exact Question Brain release ID. The runtime rejects legacy
-  `Q123`/`C123`/`CAP-01` bindings at catalogue load, while Lab exposes a
+- every released task carries the exact Question Brain release ID. The
+  immutable revision identity is supplied by
+  [`releases/task-release-2026-08-24.json`](releases/task-release-2026-08-24.json):
+  each entry pins `stableKey`, Question Brain `revisionId`, and
+  `contentHash`, and exposes `capabilityKeys`. The older `questionKeys`
+  property remains a read-only projection for Lab clients that have not yet
+  migrated; it is never used to replace a full binding. The runtime rejects
+  malformed or conflicting bindings at catalogue load, while Lab exposes a
   server-side relation audit at `/api/runtime/relations`;
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
@@ -57,6 +62,35 @@ The release smoke is recorded in
 - Lab owns curriculum, learner UX, attempts and evidence projections.
 - This repository owns task revisions, profile images, sandbox policy, hidden
   tests, run results and runtime traces.
+
+## Question Brain release binding
+
+Task code and hidden tests are still owned by the task revision directory. The
+question identity is deliberately kept in a separate release manifest so a
+previously released `task.json` is not rewritten when Question Brain publishes
+new content. A manifest entry is keyed by `(taskId, revision)` and is applied
+only when the runtime loads the immutable catalogue.
+
+```json
+{
+  "taskId": "node-rate-limiter-001",
+  "revision": 1,
+  "questionBindings": [
+    {
+      "stableKey": "question.q315",
+      "revisionId": "7df22e91-c351-4cd3-9bee-7ab321c72efd",
+      "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
+    }
+  ],
+  "capabilityKeys": []
+}
+```
+
+The release ID is a content-release pin, not a live lookup. Updating a
+question creates a new Question Brain release and a new runtime release
+manifest; it must not silently change the evidence context of an old run. Set
+`RUNTIME_RELEASE_MANIFEST` to test a candidate manifest before publishing it.
+The default runtime and Compose image load the manifest from `releases/`.
 
 ## Local development
 

@@ -63,6 +63,9 @@ func TestHealthAndProfiles(t *testing.T) {
 	if !strings.Contains(tasksRecorder.Body.String(), `"questionReleaseId":"question-release-15e032d7b732f8c1"`) || !strings.Contains(tasksRecorder.Body.String(), `"question.c024"`) {
 		t.Fatalf("task catalogue did not expose canonical Question Brain bindings: %s", tasksRecorder.Body.String())
 	}
+	if !strings.Contains(tasksRecorder.Body.String(), `"questionBindings"`) || !strings.Contains(tasksRecorder.Body.String(), `"capabilityKeys":[]`) {
+		t.Fatalf("task catalogue did not expose the versioned binding contract: %s", tasksRecorder.Body.String())
+	}
 	if body.Profiles[0].SupportedTasks == nil {
 		t.Fatal("profile supportedTasks must be an empty array, not null")
 	}
