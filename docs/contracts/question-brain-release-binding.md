@@ -54,13 +54,13 @@ catalogue startup. A released task missing from an active manifest also fails
 startup. This makes a release incomplete rather than allowing a partially
 bound catalogue into the API.
 
-The checked-in candidate currently points at
-`question-release-15e032d7b732f8c1`. It is intentionally not the default: if
-Question Brain has moved to another published release, the runtime must report
-`manifest-not-configured`/legacy compatibility rather than pretending that the
-old candidate is current. Generate a new manifest from the final published
-Question Brain release, verify every revision and hash, then select it through
-the deployment environment.
+The historical candidate points at `question-release-15e032d7b732f8c1` and is
+kept immutable for audit purposes. The current reconciled candidate is
+[`task-release-2026-08-24-qb-d550846f.json`](../../releases/task-release-2026-08-24-qb-d550846f.json),
+which pins `question-release-d550846f4743c4d3`. It is selected only through
+`RUNTIME_RELEASE_MANIFEST`; no file is an implicit fallback. If Question Brain
+publishes a new release, generate another manifest, run the catalogue and
+relation checks, and select it through the deployment environment.
 
 For a future Question Brain release:
 
@@ -70,6 +70,18 @@ For a future Question Brain release:
    `questionReleaseId`;
 3. run the catalogue and relation checks before changing the workspace pin;
 4. publish the manifest with the runtime release; never edit the old manifest.
+
+The reproducible helper is
+[`scripts/release/generate-question-release.py`](../../scripts/release/generate-question-release.py):
+
+```bash
+python3 scripts/release/generate-question-release.py \\
+  --source releases/task-release-2026-08-24.json \\
+  --question-brain http://127.0.0.1:48127 \\
+  --workspace fluent-interview \\
+  --release-id runtime-task-release-YYYY-MM-DD-qb-<release-suffix> \\
+  --output releases/task-release-YYYY-MM-DD-qb-<release-suffix>.json
+```
 
 The runtime does not fetch Question Brain during a task run. Lab may fetch the
 referenced card for display, but it must verify the returned revision and hash

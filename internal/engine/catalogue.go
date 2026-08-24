@@ -599,6 +599,7 @@ func (c *Catalogue) TaskWorkspace(id string, revision int) (contracts.TaskWorksp
 		Profile:         task.Profile,
 		Runtime:         task.Runtime,
 		Brief:           string(brief),
+		EditableFiles:   append([]string(nil), task.EditableFiles...),
 		StarterFiles:    starterFiles,
 	}, nil
 }

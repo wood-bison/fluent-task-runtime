@@ -1,0 +1,274 @@
+{
+  "contractVersion": "fluent-task-runtime.task-release.v1",
+  "releaseId": "runtime-task-release-2026-08-24-qb-d550846f",
+  "questionReleaseId": "question-release-d550846f4743c4d3",
+  "tasks": [
+    {
+      "taskId": "deferred",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.c142",
+          "revisionId": "e4325e9e-667f-41e5-a80f-562a194f4caa",
+          "contentHash": "fb879d891f3aa1e22f92fe1ccf7fad6eb3656508a6fa5772cff93d540b9d379d"
+        },
+        {
+          "stableKey": "question.q777",
+          "revisionId": "fd1d92b4-a115-4ffd-a049-8880f045acb9",
+          "contentHash": "9d4cee51b8b28eda74a4f5555d017c94e6ac86d949a7f56ad1fd099a62d80761"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "dotnet-cancellation-001",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q937",
+          "revisionId": "14abd579-cb0f-4a80-9f7a-f0a367dd8b9c",
+          "contentHash": "2ca4aaab5c8ce9a31937ddcefc777932be8cf2843e025291531e02f703296ec5"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "fluent-calculator",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q977",
+          "revisionId": "a95272eb-97f6-4f1c-8d31-36ce4f18c742",
+          "contentHash": "cc74d6a0eac5ca1e3a661ace944317e307e2be22b20f13bc69fb2f20c0f53104"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "go-rate-limiter-001",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q315",
+          "revisionId": "7df22e91-c351-4cd3-9bee-7ab321c72efd",
+          "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
+        },
+        {
+          "stableKey": "question.c024",
+          "revisionId": "ef04e2e3-89e8-4f5a-9630-176dc934c41c",
+          "contentHash": "e227921710532969197daf5a177fbcecd0f0e1eedbb8329732ed63f69f4d0841"
+        },
+        {
+          "stableKey": "question.q444",
+          "revisionId": "f677d1ac-9dcd-450f-8aed-2350f98b59ca",
+          "contentHash": "9f84873b0009f46638e47e5f4e577c91eec617f397ed60816a94a4e7034217de"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "java-rate-limiter-001",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q315",
+          "revisionId": "7df22e91-c351-4cd3-9bee-7ab321c72efd",
+          "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
+        },
+        {
+          "stableKey": "question.c024",
+          "revisionId": "ef04e2e3-89e8-4f5a-9630-176dc934c41c",
+          "contentHash": "e227921710532969197daf5a177fbcecd0f0e1eedbb8329732ed63f69f4d0841"
+        },
+        {
+          "stableKey": "question.q444",
+          "revisionId": "f677d1ac-9dcd-450f-8aed-2350f98b59ca",
+          "contentHash": "9f84873b0009f46638e47e5f4e577c91eec617f397ed60816a94a4e7034217de"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-auth-015",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q195",
+          "revisionId": "61db31c9-42f2-40f5-880e-26207e5f071d",
+          "contentHash": "c4604a7e07554e92047fbf729228ccdd15c757801c6b70767bae92b7b88dbd52"
+        },
+        {
+          "stableKey": "question.q416",
+          "revisionId": "8ceac08b-705c-4d5c-a254-19ef291a946c",
+          "contentHash": "dc48478ccff60f7715ac55bc8df5ba746014f0bb1c995ec78338429c3e3673c6"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-cache-014",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q206",
+          "revisionId": "79e99d73-8e11-4854-92e3-93a51b2ae604",
+          "contentHash": "e2d43fcdc5fdc8a6bc86caa5e4ea48f0f0853e8ee9c9f1a39e69ad2b454e3be9"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-concurrency-012",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q1062",
+          "revisionId": "dd5f95f8-eeec-4da4-aed0-b0ce225af1ea",
+          "contentHash": "06a2bddae87dd86d584853d07b3c5debb187a6bea8e2eabab4784977d7a1df16"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-cpu-bound-002",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q775",
+          "revisionId": "c26bfa83-eef8-4bb9-a656-3e4b6c8e0a08",
+          "contentHash": "a8604330fe774f155893db1f339329b3a76554d63c7bab4bff839688849e4132"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-event-loop-001",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.c009",
+          "revisionId": "33d6e6b3-6d7d-4d18-922f-b2be52096a0d",
+          "contentHash": "7f95597496fdaae97e2d07675fd5bbadd490cbc90c3506b72c832c0c31a6bf82"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-idempotency-013",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q722",
+          "revisionId": "51d7a9ae-547c-4fef-a24c-92aecb6e2d56",
+          "contentHash": "7bcb62a27638b1ecddd07ba73a36f31bd6a687c89f1bac77405f70f78270d743"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-memory-004",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q816",
+          "revisionId": "e1dea7de-9619-4690-8c1d-79c732518ebf",
+          "contentHash": "d6ee7e86a0adf87fcf9506177da2ffb0a5637a1c508239249af39e7a3e3de117"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-rate-limiter-001",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q315",
+          "revisionId": "7df22e91-c351-4cd3-9bee-7ab321c72efd",
+          "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
+        },
+        {
+          "stableKey": "question.c024",
+          "revisionId": "ef04e2e3-89e8-4f5a-9630-176dc934c41c",
+          "contentHash": "e227921710532969197daf5a177fbcecd0f0e1eedbb8329732ed63f69f4d0841"
+        },
+        {
+          "stableKey": "question.q444",
+          "revisionId": "f677d1ac-9dcd-450f-8aed-2350f98b59ca",
+          "contentHash": "9f84873b0009f46638e47e5f4e577c91eec617f397ed60816a94a4e7034217de"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "node-streams-003",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q792",
+          "revisionId": "1116a9a5-43dd-4758-a96c-651cb705b32c",
+          "contentHash": "a4586c9892ffe4555b1911ee85e99b1771d221fb0587cf6e9e637867a602f603"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "pg-indexes-008",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q695",
+          "revisionId": "18b0312c-46ea-40fd-a9bc-f74f4d67bc81",
+          "contentHash": "c1dde1447d17d25aa7d698a1fd13d4ed51078a2c21db9b43bd16781525372d1a"
+        },
+        {
+          "stableKey": "question.q700",
+          "revisionId": "16d1988a-e97c-40a0-a0d1-c3b7532daac3",
+          "contentHash": "7af2b9900130270f9e74df0ece068b718d7e86fcc1c2cda19ae6ee17e33588f1"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "pg-locks-016",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q059",
+          "revisionId": "8e10cea9-e1bf-4ed2-91e0-464b5bf76061",
+          "contentHash": "9850ae4af758de74fe8448dd25879b269d8efd991b361bbb37a8eda3655f8e4c"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "pg-rate-limiter-001",
+      "revision": 1,
+      "questionBindings": [
+        {
+          "stableKey": "question.q315",
+          "revisionId": "7df22e91-c351-4cd3-9bee-7ab321c72efd",
+          "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
+        },
+        {
+          "stableKey": "question.c024",
+          "revisionId": "ef04e2e3-89e8-4f5a-9630-176dc934c41c",
+          "contentHash": "e227921710532969197daf5a177fbcecd0f0e1eedbb8329732ed63f69f4d0841"
+        },
+        {
+          "stableKey": "question.q444",
+          "revisionId": "f677d1ac-9dcd-450f-8aed-2350f98b59ca",
+          "contentHash": "9f84873b0009f46638e47e5f4e577c91eec617f397ed60816a94a4e7034217de"
+        }
+      ],
+      "capabilityKeys": []
+    },
+    {
+      "taskId": "project-book-boundary-001",
+      "revision": 1,
+      "questionBindings": [],
+      "capabilityKeys": [
+        "capability.tier1-capstone"
+      ]
+    }
+  ]
+}

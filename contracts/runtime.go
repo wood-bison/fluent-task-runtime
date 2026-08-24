@@ -117,6 +117,7 @@ type TaskWorkspace struct {
 	Profile         string            `json:"profile"`
 	Runtime         string            `json:"runtime"`
 	Brief           string            `json:"brief"`
+	EditableFiles   []string          `json:"editableFiles"`
 	StarterFiles    map[string]string `json:"starterFiles"`
 }
 
