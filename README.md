@@ -87,6 +87,12 @@ only when the runtime loads the immutable catalogue.
 }
 ```
 
+For compatibility, `questionKeys` is the ordered union of the binding
+`stableKey` values and the `capabilityKeys` values. Therefore a live task may
+contain both `question.q315` and a hierarchical key such as
+`capability.distributed-systems.rate-limiter`; clients must use
+`questionBindings` and `capabilityKeys` for authoritative joins.
+
 The release ID is a content-release pin, not a live lookup. Updating a
 question creates a new Question Brain release and a new runtime release
 manifest; it must not silently change the evidence context of an old run. Set

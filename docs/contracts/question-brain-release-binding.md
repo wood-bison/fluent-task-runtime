@@ -22,13 +22,19 @@ database or copying question prose into the runtime repository.
     }
   ],
   "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
-  "questionKeys": ["question.q315"]
+  "questionKeys": [
+    "question.q315",
+    "capability.distributed-systems.rate-limiter"
+  ]
 }
 ```
 
 `questionBindings` is the authoritative join. `questionKeys` is a deprecated
-compatibility projection and may be removed only after all Lab clients consume
-`questionBindings`.
+compatibility projection: it contains the `stableKey` of every
+`questionBindings` entry followed by every `capabilityKeys` entry, including
+hierarchical keys such as `capability.distributed-systems.rate-limiter`. It
+may be removed only after all Lab clients consume `questionBindings` and
+`capabilityKeys`.
 
 ## Manifest and immutability
 

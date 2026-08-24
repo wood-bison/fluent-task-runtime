@@ -73,7 +73,7 @@ func TestCatalogueRejectsLegacyQuestionBindingsForReleasedTasks(t *testing.T) {
 
 func TestCatalogueLoadsImmutableReleaseManifestOverlay(t *testing.T) {
 	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
-	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-24.json"))
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-24-qb-d550846f-i2.json"))
 	catalogue, err := NewCatalogue()
 	if err != nil {
 		t.Fatal(err)
@@ -82,20 +82,23 @@ func TestCatalogueLoadsImmutableReleaseManifestOverlay(t *testing.T) {
 	if !ok {
 		t.Fatal("manifest task was not loaded")
 	}
-	if task.QuestionReleaseID != "question-release-15e032d7b732f8c1" {
+	if task.QuestionReleaseID != "question-release-d550846f4743c4d3" {
 		t.Fatalf("unexpected Question Brain release: %q", task.QuestionReleaseID)
 	}
 	if len(task.QuestionBindings) != 3 || task.QuestionBindings[0].StableKey != "question.q315" {
 		t.Fatalf("immutable question bindings were not projected: %#v", task.QuestionBindings)
 	}
+	if len(task.QuestionKeys) != 4 || task.QuestionKeys[3] != "capability.distributed-systems.rate-limiter" {
+		t.Fatalf("questionKeys compatibility projection must include hierarchical capability keys: %#v", task.QuestionKeys)
+	}
 	if task.QuestionBindings[0].RevisionID == "" || len(task.QuestionBindings[0].ContentHash) != 64 {
 		t.Fatalf("binding is missing revision identity or hash: %#v", task.QuestionBindings[0])
 	}
-	if task.CapabilityKeys == nil || len(task.CapabilityKeys) != 0 {
-		t.Fatalf("capabilityKeys must be exposed as an empty array for this task: %#v", task.CapabilityKeys)
+	if len(task.CapabilityKeys) != 1 || task.CapabilityKeys[0] != "capability.distributed-systems.rate-limiter" {
+		t.Fatalf("capabilityKeys must be projected from the active I2 release: %#v", task.CapabilityKeys)
 	}
 	legacy, ok := catalogue.Task("project-book-boundary-001", 1)
-	if !ok || len(legacy.QuestionBindings) != 0 || len(legacy.CapabilityKeys) != 1 || legacy.CapabilityKeys[0] != "capability.tier1-capstone" {
+	if !ok || len(legacy.QuestionBindings) != 0 || len(legacy.CapabilityKeys) != 1 || legacy.CapabilityKeys[0] != "capability.tier1-capstone" || len(legacy.QuestionKeys) != 1 || legacy.QuestionKeys[0] != "capability.tier1-capstone" {
 		t.Fatalf("capability-only release was not projected: %#v (ok=%v)", legacy, ok)
 	}
 
