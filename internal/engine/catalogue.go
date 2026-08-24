@@ -19,19 +19,39 @@ import (
 type Catalogue struct {
 	profiles        contracts.Profiles
 	tasks           contracts.Tasks
+	families        contracts.TaskFamilies
 	tasksRoot       string
 	releaseManifest *taskReleaseManifest
 }
 
 func NewCatalogue() (*Catalogue, error) {
 	tasksRoot := defaultTasksRoot()
+	familyManifest, err := loadTaskFamilyManifest()
+	if err != nil {
+		return nil, err
+	}
 	releaseManifest, err := loadReleaseManifest()
 	if err != nil {
 		return nil, err
 	}
+	if releaseManifest != nil && releaseManifest.ContractVersion == releaseManifestContractV2 {
+		if familyManifest == nil {
+			return nil, fmt.Errorf("release manifest %q requires a TaskFamily manifest", releaseManifest.ReleaseID)
+		}
+		if releaseManifest.TaskFamilyReleaseID != familyManifest.ReleaseID {
+			return nil, fmt.Errorf("release manifest %q pins TaskFamily release %q, loaded %q", releaseManifest.ReleaseID, releaseManifest.TaskFamilyReleaseID, familyManifest.ReleaseID)
+		}
+	}
 	tasks, err := loadTasks(tasksRoot, releaseManifest)
 	if err != nil {
 		return nil, err
+	}
+	families := contracts.TaskFamilies{}
+	if familyManifest != nil {
+		tasks, families, err = bindTaskFamilies(tasks, familyManifest, tasksRoot)
+		if err != nil {
+			return nil, err
+		}
 	}
 	profiles := []contracts.Profile{
 		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
@@ -53,7 +73,7 @@ func NewCatalogue() (*Catalogue, error) {
 			}
 		}
 	}
-	return &Catalogue{tasksRoot: tasksRoot, releaseManifest: releaseManifest, profiles: contracts.Profiles{
+	return &Catalogue{tasksRoot: tasksRoot, releaseManifest: releaseManifest, families: families, profiles: contracts.Profiles{
 		ContractVersion: contracts.ProfileContractVersion,
 		Profiles:        profiles,
 	}, tasks: contracts.Tasks{ContractVersion: contracts.TaskContractVersion, Tasks: tasks}}, nil
@@ -89,8 +109,9 @@ type taskDescriptor struct {
 }
 
 const (
-	releaseManifestEnv      = "RUNTIME_RELEASE_MANIFEST"
-	releaseManifestContract = "fluent-task-runtime.task-release.v1"
+	releaseManifestEnv        = "RUNTIME_RELEASE_MANIFEST"
+	releaseManifestContract   = "fluent-task-runtime.task-release.v1"
+	releaseManifestContractV2 = "fluent-task-runtime.task-release.v2"
 )
 
 type taskRevisionKey struct {
@@ -101,17 +122,19 @@ type taskRevisionKey struct {
 type taskReleaseEntry struct {
 	TaskID            string                      `json:"taskId"`
 	Revision          int                         `json:"revision"`
+	TaskFamilyKey     string                      `json:"taskFamilyKey,omitempty"`
 	QuestionReleaseID string                      `json:"questionReleaseId,omitempty"`
 	QuestionBindings  []contracts.QuestionBinding `json:"questionBindings"`
 	CapabilityKeys    []string                    `json:"capabilityKeys"`
 }
 
 type taskReleaseManifest struct {
-	ContractVersion   string             `json:"contractVersion"`
-	ReleaseID         string             `json:"releaseId"`
-	QuestionReleaseID string             `json:"questionReleaseId"`
-	Tasks             []taskReleaseEntry `json:"tasks"`
-	entries           map[taskRevisionKey]taskReleaseEntry
+	ContractVersion     string             `json:"contractVersion"`
+	ReleaseID           string             `json:"releaseId"`
+	QuestionReleaseID   string             `json:"questionReleaseId"`
+	TaskFamilyReleaseID string             `json:"taskFamilyReleaseId,omitempty"`
+	Tasks               []taskReleaseEntry `json:"tasks"`
+	entries             map[taskRevisionKey]taskReleaseEntry
 }
 
 func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.Task, error) {
@@ -156,6 +179,8 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 		questionBindings := append([]contracts.QuestionBinding(nil), descriptor.QuestionBindings...)
 		questionKeys := append([]string(nil), descriptor.QuestionKeys...)
 		capabilityKeys := append([]string(nil), descriptor.CapabilityKeys...)
+		taskFamilyKey := ""
+		availability := "unreleased"
 		if releaseManifest != nil {
 			key := taskRevisionKey{ID: id, Revision: descriptor.Revision}
 			entry, found := releaseManifest.entries[key]
@@ -164,6 +189,8 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 			}
 			if found {
 				seenManifestEntries[key] = struct{}{}
+				taskFamilyKey = entry.TaskFamilyKey
+				availability = "runnable"
 				var mergeErr error
 				questionReleaseID, questionBindings, questionKeys, capabilityKeys, mergeErr = mergeReleaseEntry(
 					questionReleaseID, questionBindings, questionKeys, capabilityKeys, releaseManifest.QuestionReleaseID, entry,
@@ -181,7 +208,7 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 		}
 		tasks = append(tasks, contracts.Task{
 			ID: id, Revision: revision, Language: descriptor.Language, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
-			Image: descriptor.Image, Status: status, Runnable: releaseManifest != nil && status == "released", Network: "none", HiddenTests: true,
+			Image: descriptor.Image, Status: status, Runnable: releaseManifest != nil && status == "released", Availability: availability, TaskFamilyKey: taskFamilyKey, Network: "none", HiddenTests: true,
 			CheckCommand:  append([]string(nil), descriptor.CheckCommand...),
 			EditableFiles: append([]string(nil), descriptor.EditableFiles...),
 			DeclaredTests: append([]string(nil), descriptor.DeclaredTests...),
@@ -219,7 +246,7 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 	if err := json.Unmarshal(body, &manifest); err != nil {
 		return nil, fmt.Errorf("decode release manifest %q: %w", path, err)
 	}
-	if manifest.ContractVersion != releaseManifestContract {
+	if manifest.ContractVersion != releaseManifestContract && manifest.ContractVersion != releaseManifestContractV2 {
 		return nil, fmt.Errorf("release manifest %q has unsupported contractVersion %q", path, manifest.ContractVersion)
 	}
 	if strings.TrimSpace(manifest.ReleaseID) == "" {
@@ -227,6 +254,9 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 	}
 	if !isQuestionReleaseID(manifest.QuestionReleaseID) {
 		return nil, fmt.Errorf("release manifest %q must declare a valid questionReleaseId", path)
+	}
+	if manifest.ContractVersion == releaseManifestContractV2 && strings.TrimSpace(manifest.TaskFamilyReleaseID) == "" {
+		return nil, fmt.Errorf("release manifest %q must declare taskFamilyReleaseId for contract v2", path)
 	}
 	manifest.entries = make(map[taskRevisionKey]taskReleaseEntry, len(manifest.Tasks))
 	for index, entry := range manifest.Tasks {
@@ -240,6 +270,9 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 		}
 		if entry.QuestionReleaseID != "" && entry.QuestionReleaseID != manifest.QuestionReleaseID {
 			return nil, fmt.Errorf("release manifest %q entry %s@%d pins question release %q instead of %q", path, entry.TaskID, entry.Revision, entry.QuestionReleaseID, manifest.QuestionReleaseID)
+		}
+		if manifest.ContractVersion == releaseManifestContractV2 && !taskFamilyKeyPattern.MatchString(strings.TrimSpace(entry.TaskFamilyKey)) {
+			return nil, fmt.Errorf("release manifest %q entry %s@%d must pin one TaskFamily", path, entry.TaskID, entry.Revision)
 		}
 		if _, _, _, err := validateQuestionBinding(entry.QuestionBindings, nil, entry.CapabilityKeys, manifest.QuestionReleaseID, "released"); err != nil {
 			return nil, fmt.Errorf("release manifest %q entry %s@%d: %w", path, entry.TaskID, entry.Revision, err)
@@ -528,6 +561,8 @@ func (c *Catalogue) ReleaseSummary() contracts.TaskSummaryResponse {
 			Revision:          task.Revision,
 			Status:            task.Status,
 			Runnable:          task.Runnable,
+			Availability:      task.Availability,
+			TaskFamilyKey:     task.TaskFamilyKey,
 			Profile:           task.Profile,
 			Runtime:           task.Runtime,
 			QuestionReleaseID: task.QuestionReleaseID,
@@ -556,7 +591,7 @@ func (c *Catalogue) TaskWorkspace(id string, revision int) (contracts.TaskWorksp
 	if !found {
 		return contracts.TaskWorkspace{}, fmt.Errorf("task %q revision %d is not in the runtime catalogue", id, revision)
 	}
-	if task.Status != "released" {
+	if task.Status != "released" || task.Availability != "runnable" {
 		return contracts.TaskWorkspace{}, fmt.Errorf("task %q revision %d is not released", id, revision)
 	}
 	taskRoot := filepath.Join(c.tasksRoot, task.ID)
@@ -662,4 +697,18 @@ func (c *Catalogue) Profiles() contracts.Profiles {
 		copy(result.Profiles[index].SupportedTasks, tasks)
 	}
 	return result
+}
+
+func (c *Catalogue) TaskFamilies() contracts.TaskFamilies {
+	return cloneTaskFamilies(c.families)
+}
+
+func (c *Catalogue) TaskFamily(key string) (contracts.TaskFamily, bool) {
+	for _, family := range c.families.Families {
+		if family.Key == key {
+			cloned := cloneTaskFamilies(contracts.TaskFamilies{ContractVersion: c.families.ContractVersion, ReleaseID: c.families.ReleaseID, Families: []contracts.TaskFamily{family}})
+			return cloned.Families[0], true
+		}
+	}
+	return contracts.TaskFamily{}, false
 }

@@ -1,0 +1,146 @@
+{
+  "contractVersion": "fluent-task-runtime.task-families.v1",
+  "releaseId": "task-family-release-2026-08-25",
+  "families": [
+    {
+      "key": "task-family.deferred",
+      "title": { "en": "Deferred settlement", "ru": "Отложенное завершение" },
+      "brief": { "en": "Implement a Promise-compatible Deferred with explicit settlement invariants.", "ru": "Реализуйте совместимый с Promise Deferred с явными инвариантами завершения." },
+      "capabilityKeys": ["capability.runtime.deferred"],
+      "rubricRef": "rubric.deferred.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "deferred", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "231827224de30d4dc0f83ad39e268fb20bbd236cce19f5d58cc7a58b687fd7dd" }]
+    },
+    {
+      "key": "task-family.dotnet-cancellation",
+      "title": { "en": ".NET cancellation boundary", "ru": "Граница отмены в .NET" },
+      "brief": { "en": "Keep asynchronous work cancellable so it cannot outlive its caller.", "ru": "Сделайте асинхронную работу отменяемой, чтобы она не переживала вызывающий код." },
+      "capabilityKeys": ["capability.dotnet.cancellation-boundary"],
+      "rubricRef": "rubric.cancellation-boundary.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "dotnet-cancellation-001", "revision": 1, "language": "csharp", "profile": "dotnet", "availability": "runnable", "immutableHash": "c1a9d4d38492fbd4d0f557dd2f25f151fa253790e8a315c962cf8078e588e234" }]
+    },
+    {
+      "key": "task-family.fluent-calculator",
+      "title": { "en": "Fluent calculator", "ru": "Fluent-калькулятор" },
+      "brief": { "en": "Build a stateful fluent API that keeps its edge-case invariants.", "ru": "Создайте изменяемый fluent API, сохраняющий инварианты на граничных случаях." },
+      "capabilityKeys": ["capability.runtime.fluent-calculator"],
+      "rubricRef": "rubric.fluent-api.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "fluent-calculator", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "a47affcdc514b2307678b756535ba830921f66608a44c33d15dd57c14876abcf" }]
+    },
+    {
+      "key": "task-family.rate-limiter",
+      "title": { "en": "Rate limiter", "ru": "Ограничитель частоты" },
+      "brief": { "en": "Implement a bounded rate limiter and make burst, refill, isolation, and evidence observable.", "ru": "Реализуйте ограничитель частоты и сделайте наблюдаемыми burst, пополнение, изоляцию и доказательства." },
+      "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
+      "rubricRef": "rubric.rate-limiter.v1",
+      "status": "released",
+      "revisions": [
+        { "taskId": "go-rate-limiter-001", "revision": 1, "language": "go", "profile": "go", "availability": "runnable", "immutableHash": "6fe73f7647043b86971b7791a8b24efc45cc9a9bf247376b62802bf0886e08a6" },
+        { "taskId": "java-rate-limiter-001", "revision": 1, "language": "java", "profile": "java", "availability": "runnable", "immutableHash": "c2284e643b7b950e24628882897fe5448b1c810b1f571300cf2db89e74355a23" },
+        { "taskId": "node-rate-limiter-001", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "8fd03194764d9196e6d9f865f1cd89183ba86549c36efcf889bc8b3763929737" },
+        { "taskId": "pg-rate-limiter-001", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "03ace5fd617f82bc12699ff5ce78d30139e93be401f519aa2b0a59dd9959818b" }
+      ]
+    },
+    {
+      "key": "task-family.authentication-authorization",
+      "title": { "en": "Authentication and authorization", "ru": "Аутентификация и авторизация" },
+      "brief": { "en": "Store password verifiers safely and enforce resource ownership.", "ru": "Безопасно храните верификаторы паролей и проверяйте владение ресурсом." },
+      "capabilityKeys": ["capability.http-api.authentication-authorization"],
+      "rubricRef": "rubric.authentication-authorization.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-auth-015", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "df1d06d91361b854ba1bf0becd3588b1ffd63ee0f1fcae2cee11f0c8403ebff7" }]
+    },
+    {
+      "key": "task-family.cache-invalidation",
+      "title": { "en": "Cache invalidation and stampede control", "ru": "Инвалидация кэша и защита от stampede" },
+      "brief": { "en": "Build cache-aside behavior that collapses misses and invalidates on writes.", "ru": "Реализуйте cache-aside, объединение промахов и инвалидацию при записи." },
+      "capabilityKeys": ["capability.delivery-observability.cache-invalidation"],
+      "rubricRef": "rubric.cache-invalidation.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-cache-014", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "7f3bc81851e56fa84a9963b8abcdbd6e210028b05347fa15ca264e3eed2462da" }]
+    },
+    {
+      "key": "task-family.bounded-concurrency",
+      "title": { "en": "Bounded concurrency", "ru": "Ограниченная конкуррентность" },
+      "brief": { "en": "Run asynchronous work under a hard concurrency ceiling without losing order.", "ru": "Запускайте асинхронную работу под жёстким лимитом, не теряя порядок результатов." },
+      "capabilityKeys": ["capability.nodejs.bounded-concurrency"],
+      "rubricRef": "rubric.bounded-concurrency.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-concurrency-012", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "6e63dd73a91dd92cfbb3942b37f516653a168ccfa54f23f5b8c53735479ba3f4" }]
+    },
+    {
+      "key": "task-family.cpu-bound-work",
+      "title": { "en": "CPU-bound work and worker threads", "ru": "CPU-нагрузка и worker threads" },
+      "brief": { "en": "Move expensive work away from the event loop and make cancellation observable.", "ru": "Уберите тяжёлую работу с event loop и сделайте отмену наблюдаемой." },
+      "capabilityKeys": ["capability.nodejs.cpu-bound-work"],
+      "rubricRef": "rubric.cpu-bound-work.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-cpu-bound-002", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "5fcf92b6466482f37708230646735b976afe7e55b0777c2fa831e3e8c77a4a33" }]
+    },
+    {
+      "key": "task-family.event-loop-ordering",
+      "title": { "en": "Node.js event-loop ordering", "ru": "Порядок выполнения в event loop Node.js" },
+      "brief": { "en": "Predict and verify scheduling order in a controlled Node.js process.", "ru": "Предскажите и проверьте порядок планирования в управляемом процессе Node.js." },
+      "capabilityKeys": ["capability.nodejs.event-loop-ordering"],
+      "rubricRef": "rubric.event-loop-ordering.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-event-loop-001", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "7152ee0bd5d52996bebe6f6a340c7491750be4b903e7c72bb6d4d0e52c9fa786" }]
+    },
+    {
+      "key": "task-family.idempotent-delivery",
+      "title": { "en": "Idempotent message delivery", "ru": "Идемпотентная доставка сообщений" },
+      "brief": { "en": "Handle redelivery with deduplication, bounded retries, and a dead-letter path.", "ru": "Обработайте повторную доставку через дедупликацию, ограниченные повторы и dead letter path." },
+      "capabilityKeys": ["capability.distributed-systems.idempotent-delivery"],
+      "rubricRef": "rubric.idempotent-delivery.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-idempotency-013", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "04e4b5075e144aabf0d3f08a923a8a62a2fa8497179126d2ef8c65f9403c3e43" }]
+    },
+    {
+      "key": "task-family.memory-retention",
+      "title": { "en": "Memory retention and garbage collection", "ru": "Удержание памяти и сборка мусора" },
+      "brief": { "en": "Make ownership explicit so released values stop growing the live set.", "ru": "Сделайте владение явным, чтобы освобождённые значения не раздували live set." },
+      "capabilityKeys": ["capability.nodejs.memory-retention"],
+      "rubricRef": "rubric.memory-retention.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-memory-004", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "dfd3920a3dd7ab0b989c4e3000a6644a2ba03a9f6193db45831712d23b4e041d" }]
+    },
+    {
+      "key": "task-family.streams-backpressure",
+      "title": { "en": "Streams and backpressure", "ru": "Потоки и backpressure" },
+      "brief": { "en": "Build an incremental Transform that respects flow control and bad input.", "ru": "Создайте инкрементальный Transform, соблюдающий flow control и корректно обрабатывающий плохой ввод." },
+      "capabilityKeys": ["capability.nodejs.streams-backpressure"],
+      "rubricRef": "rubric.streams-backpressure.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "node-streams-003", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "15013c6aa296696ed5797fa0a493997499ae07d19d7ac5ba3b79f21d00ef54d2" }]
+    },
+    {
+      "key": "task-family.postgresql-query-planning",
+      "title": { "en": "PostgreSQL query planning", "ru": "Планирование запросов PostgreSQL" },
+      "brief": { "en": "Measure why a planner rejects a low-selectivity index.", "ru": "Измерьте, почему планировщик отвергает индекс с низкой селективностью." },
+      "capabilityKeys": ["capability.postgresql.query-planning"],
+      "rubricRef": "rubric.postgresql-query-planning.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "pg-indexes-008", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "ca99bde93945884b504d7ffb9efd77d25271dc8a475a69ba1fdd7fa910c25ca4" }]
+    },
+    {
+      "key": "task-family.postgresql-row-locks",
+      "title": { "en": "PostgreSQL row locks", "ru": "Блокировки строк PostgreSQL" },
+      "brief": { "en": "Claim jobs concurrently without duplicate work or lock waits.", "ru": "Забирайте задания конкурентно без дублей и ожидания блокировок." },
+      "capabilityKeys": ["capability.postgresql.row-locks"],
+      "rubricRef": "rubric.postgresql-row-locks.v1",
+      "status": "released",
+      "revisions": [{ "taskId": "pg-locks-016", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "a4d705fcaafd077b9ee587d3ba5f9af9b8e1dc5d3dd6b1b7ab48118c2345295e" }]
+    },
+    {
+      "key": "task-family.project-book-boundary",
+      "title": { "en": "Project book: server-owned boundary", "ru": "Проектная книга: граница владения сервером" },
+      "brief": { "en": "Make the execution boundary explicit before this project becomes runnable.", "ru": "Сделайте границу исполнения явной до открытия этого проекта." },
+      "capabilityKeys": ["capability.tier1-capstone"],
+      "rubricRef": "rubric.project-book-boundary.v1",
+      "status": "unreleased",
+      "revisions": [{ "taskId": "project-book-boundary-001", "revision": 1, "language": "typescript", "profile": "node", "availability": "unreleased", "immutableHash": "75150f23f289509203f2551ed67c31d80990a6bab9489874a1440ac0b77fa4bf" }]
+    }
+  ]
+}

@@ -42,10 +42,14 @@ type QuestionCapabilityBinding struct {
 type TaskFamily struct {
 	Key              string                `json:"key"`
 	Title            LocalizedContractText `json:"title"`
+	Brief            LocalizedContractText `json:"brief,omitempty"`
 	CapabilityKeys   []string              `json:"capabilityKeys"`
 	QuestionBindings []QuestionBinding     `json:"questionBindings"`
 	RevisionIDs      []string              `json:"revisionIds"`
+	RubricRef        string                `json:"rubricRef,omitempty"`
 	Status           string                `json:"status"`
+	Runnable         bool                  `json:"runnable"`
+	Revisions        []TaskFamilyRevision  `json:"revisions,omitempty"`
 }
 
 // TaskRevision is the executable, language-specific identity. It is separate

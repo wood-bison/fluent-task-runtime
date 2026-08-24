@@ -34,6 +34,8 @@ func NewServer(catalogue *engine.Catalogue, executors ...engine.RunExecutor) htt
 	mux.HandleFunc("GET /v1/profiles", server.profiles)
 	mux.HandleFunc("GET /v1/tasks", server.tasks)
 	mux.HandleFunc("GET /v1/tasks/summary", server.taskSummary)
+	mux.HandleFunc("GET /v1/task-families", server.taskFamilies)
+	mux.HandleFunc("GET /v1/task-families/{familyKey}", server.taskFamily)
 	mux.HandleFunc("GET /v1/tasks/{taskId}/workspace", server.workspace)
 	mux.HandleFunc("POST /v1/runs", server.runs)
 	return requestLog(mux)
@@ -93,6 +95,28 @@ func (s *Server) taskSummary(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, s.catalogue.ReleaseSummary())
 }
 
+func (s *Server) taskFamilies(w http.ResponseWriter, _ *http.Request) {
+	families := s.catalogue.TaskFamilies()
+	if families.Families == nil {
+		families.Families = []contracts.TaskFamily{}
+	}
+	writeJSON(w, http.StatusOK, families)
+}
+
+func (s *Server) taskFamily(w http.ResponseWriter, r *http.Request) {
+	key := strings.TrimSpace(r.PathValue("familyKey"))
+	if key == "" {
+		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.TaskFamilyContractVersion, Code: "invalid_request", Message: "familyKey is required", Retryable: false})
+		return
+	}
+	family, found := s.catalogue.TaskFamily(key)
+	if !found {
+		writeJSON(w, http.StatusNotFound, contracts.RuntimeError{ContractVersion: contracts.TaskFamilyContractVersion, Code: "unknown_task_family", Message: "task family is not in the runtime release", Retryable: false})
+		return
+	}
+	writeJSON(w, http.StatusOK, contracts.TaskFamilyResponse{ContractVersion: contracts.TaskFamilyContractVersion, ReleaseID: s.catalogue.TaskFamilies().ReleaseID, Family: family})
+}
+
 func (s *Server) workspace(w http.ResponseWriter, r *http.Request) {
 	taskID := strings.TrimSpace(r.PathValue("taskId"))
 	if taskID == "" {
@@ -120,7 +144,7 @@ func (s *Server) workspace(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "unknown_task", Message: "task revision is not in the runtime catalogue", Retryable: false})
 		return
 	}
-	if task.Status != "released" {
+	if task.Status != "released" || !task.Runnable || task.Availability != "runnable" {
 		writeJSON(w, http.StatusNotImplemented, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "runtime_not_ready", Message: "task workspace is not released for this revision", Retryable: false})
 		return
 	}
@@ -159,7 +183,7 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "unknown_task", Message: "task revision is not in the runtime catalogue", Retryable: false})
 		return
 	}
-	if task.Status != "released" {
+	if task.Status != "released" || !task.Runnable || task.Availability != "runnable" {
 		writeJSON(w, http.StatusNotImplemented, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "runtime_not_ready", Message: "task execution is not released for this revision", Retryable: false})
 		return
 	}

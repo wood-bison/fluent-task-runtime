@@ -1,0 +1,30 @@
+{
+  "verification": "fluent-task-runtime.task-families.v1",
+  "asOf": "2026-08-25",
+  "runtimeReleaseId": "runtime-task-release-2026-08-25-qb-d550846f-g3",
+  "taskFamilyReleaseId": "task-family-release-2026-08-25",
+  "questionReleaseId": "question-release-d550846f4743c4d3",
+  "familyCount": 15,
+  "revisionCount": 18,
+  "rateLimiterRevisionCount": 4,
+  "unreleasedFamilies": ["task-family.project-book-boundary"],
+  "imageDigest": "sha256:9048934b86f72ad78b861cb8d287d249cff4795f9ef00d4a5bc7503285cff6a2",
+  "checks": {
+    "goUnitTests": "pass",
+    "dockerBuild": "pass",
+    "readiness": "pass",
+    "familyListProjection": "pass",
+    "familyDetailHidesExecutionInternals": "pass",
+    "missingFamilyRevisionFailsClosed": "pass",
+    "projectBookNotRunnable": "pass",
+    "historicalReleaseFilesUnchanged": "pass"
+  },
+  "dockerRuns": [
+    { "profile": "node", "taskId": "node-event-loop-001", "passCorrelationId": "g3-node-pass", "passStatus": "pass", "failCorrelationId": "g3-node-fail", "failStatus": "fail" },
+    { "profile": "go", "taskId": "go-rate-limiter-001", "passCorrelationId": "g3-go-pass", "passStatus": "pass", "failCorrelationId": "g3-go-fail", "failStatus": "fail" },
+    { "profile": "java", "taskId": "java-rate-limiter-001", "passCorrelationId": "g3-java-pass", "passStatus": "pass", "failCorrelationId": "g3-java-fail", "failStatus": "fail" },
+    { "profile": "dotnet", "taskId": "dotnet-cancellation-001", "passCorrelationId": "g3-dotnet-pass", "passStatus": "pass", "failCorrelationId": "g3-dotnet-fail", "failStatus": "fail" },
+    { "profile": "postgres", "taskId": "pg-rate-limiter-001", "passCorrelationId": "g3-sql-pass", "passStatus": "pass", "failCorrelationId": "g3-sql-fail", "failStatus": "fail" }
+  ],
+  "jaegerServices": ["fluent-task-runtime", "jaeger-all-in-one"]
+}

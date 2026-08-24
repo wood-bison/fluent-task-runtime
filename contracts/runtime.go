@@ -6,6 +6,7 @@ const (
 	HealthContractVersion      = "fluent-task-runtime.health.v1"
 	ProfileContractVersion     = "fluent-task-runtime.profiles.v1"
 	TaskContractVersion        = "fluent-task-runtime.tasks.v1"
+	TaskFamilyContractVersion  = "fluent-task-runtime.task-families.v1"
 	TaskSummaryContractVersion = "fluent-task-runtime.task-summary.v1"
 	WorkspaceContractVersion   = "fluent-task-runtime.task-workspace.v1"
 	RunContractVersion         = "fluent-task-runtime.run.v1"
@@ -57,6 +58,9 @@ type Task struct {
 	Image         string   `json:"image"`
 	Status        string   `json:"status"`
 	Runnable      bool     `json:"runnable"`
+	Availability  string   `json:"availability"`
+	TaskFamilyKey string   `json:"taskFamilyKey,omitempty"`
+	ImmutableHash string   `json:"immutableHash,omitempty"`
 	Network       string   `json:"network"`
 	HiddenTests   bool     `json:"hiddenTests"`
 	CheckCommand  []string `json:"checkCommand,omitempty"`
@@ -92,6 +96,8 @@ type TaskSummary struct {
 	Revision          int               `json:"revision"`
 	Status            string            `json:"status"`
 	Runnable          bool              `json:"runnable"`
+	Availability      string            `json:"availability"`
+	TaskFamilyKey     string            `json:"taskFamilyKey,omitempty"`
 	Profile           string            `json:"profile"`
 	Runtime           string            `json:"runtime"`
 	QuestionReleaseID string            `json:"questionReleaseId,omitempty"`
@@ -107,6 +113,34 @@ type TaskSummaryResponse struct {
 	RuntimeReleaseID  string        `json:"runtimeReleaseId,omitempty"`
 	QuestionReleaseID string        `json:"questionReleaseId,omitempty"`
 	Tasks             []TaskSummary `json:"tasks"`
+}
+
+// TaskFamilyRevision is a safe learner-facing projection of one executable
+// revision. It carries no source, solution, hidden-test, image, harness, or
+// sandbox command data.
+type TaskFamilyRevision struct {
+	TaskID        string `json:"taskId"`
+	Revision      int    `json:"revision"`
+	TaskFamilyKey string `json:"taskFamilyKey"`
+	Language      string `json:"language"`
+	Profile       string `json:"profile"`
+	Runtime       string `json:"runtime"`
+	Status        string `json:"status"`
+	Availability  string `json:"availability"`
+	Runnable      bool   `json:"runnable"`
+	ImmutableHash string `json:"immutableHash"`
+}
+
+type TaskFamilies struct {
+	ContractVersion string       `json:"contractVersion"`
+	ReleaseID       string       `json:"releaseId"`
+	Families        []TaskFamily `json:"families"`
+}
+
+type TaskFamilyResponse struct {
+	ContractVersion string     `json:"contractVersion"`
+	ReleaseID       string     `json:"releaseId"`
+	Family          TaskFamily `json:"family"`
 }
 
 // TaskWorkspace contains only learner-visible task material. Hidden tests,

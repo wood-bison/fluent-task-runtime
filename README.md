@@ -19,13 +19,14 @@ published Event Loop bridge:
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
 - `/v1/tasks` exposes 18 pinned task-revision descriptors (12 Node.js,
-  one .NET, three PostgreSQL, one Go and one Java); all 18 revisions are
-  `released` after a real Docker-backed smoke for every descriptor. The
-  profile catalogue remains explicit, so a future descriptor is `declared`
-  until its own harness proof lands;
+  one .NET, three PostgreSQL, one Go and one Java). The active family release
+  advertises 17 runnable revisions; `project-book-boundary-001@1` is an
+  explicit `unreleased`/`brief_only` family until its authoring and evidence
+  contract is complete. The profile catalogue remains explicit, so a future
+  descriptor is `declared` until its own harness proof lands;
 - every released task carries the exact Question Brain release ID. The
   active immutable revision identity is supplied by
-  [`releases/task-release-2026-08-24-qb-d550846f-i2.json`](releases/task-release-2026-08-24-qb-d550846f-i2.json):
+  [`releases/task-release-2026-08-25-qb-d550846f-g3.json`](releases/task-release-2026-08-25-qb-d550846f-g3.json):
   each entry pins `stableKey`, Question Brain `revisionId`, and
   `contentHash`, and exposes explicit `capabilityKeys` for the executable
   station crosswalk. The older `questionKeys` property remains a read-only
@@ -47,11 +48,11 @@ published Event Loop bridge:
   Node.js 24 process, and emits a bounded `trace.json` artifact for the Lab
   evidence projection.
 
-The next gate is a dedicated remote sandbox provider. The first project-book task,
-`project-book-boundary-001@1`, is released and Docker-smoked; Lab still keeps
-its project-book release and Tier 1 gates closed until the corresponding
-evidence join is complete. Until a future revision is released, callers
-receive a truthful `runtime_not_ready` response rather than a fake pass or a
+The next gate is a dedicated remote sandbox provider. The first project-book
+task, `project-book-boundary-001@1`, is present as an unreleased family brief;
+Lab keeps its project-book release and Tier 1 gates closed until the
+corresponding executable evidence join is complete. Callers receive a
+truthful `runtime_not_ready` response rather than a fake pass or a
 browser-owned verdict.
 
 The release smoke is recorded in
@@ -98,7 +99,7 @@ question creates a new Question Brain release and a new runtime release
 manifest; it must not silently change the evidence context of an old run. Set
 `RUNTIME_RELEASE_MANIFEST` to test a candidate manifest before publishing it.
 The local Compose stack selects
-`/opt/releases/task-release-2026-08-24-qb-d550846f-i2.json`, whose
+`/opt/releases/task-release-2026-08-25-qb-d550846f-g3.json`, whose
 `questionReleaseId` matches the current Question Brain deployment. There is no
 implicit legacy fallback: without an explicit manifest the runtime reports
 `manifest-not-configured`, readiness is degraded, and workspace/run requests

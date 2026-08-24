@@ -24,6 +24,18 @@ func testCatalogue(t *testing.T) *engine.Catalogue {
 	return catalogue
 }
 
+func testFamilyCatalogue(t *testing.T) *engine.Catalogue {
+	t.Helper()
+	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-25-qb-d550846f-g3.json"))
+	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", filepath.Join("..", "..", "task-families", "manifest.json"))
+	catalogue, err := engine.NewCatalogue()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return catalogue
+}
+
 func TestHealthAndProfiles(t *testing.T) {
 	catalogue := testCatalogue(t)
 	handler := NewServer(catalogue)
@@ -98,6 +110,52 @@ func TestHealthAndProfiles(t *testing.T) {
 			t.Fatalf("workspace leaked execution internals: %s", path)
 		}
 	}
+}
+
+func TestTaskFamilyProjectionHidesExecutionInternals(t *testing.T) {
+	handler := NewServer(testFamilyCatalogue(t))
+	list := httptest.NewRecorder()
+	handler.ServeHTTP(list, httptest.NewRequest(http.MethodGet, "/v1/task-families", nil))
+	if list.Code != http.StatusOK || !strings.Contains(list.Body.String(), `"key":"task-family.rate-limiter"`) {
+		t.Fatalf("family list failed: %d %s", list.Code, list.Body.String())
+	}
+	if strings.Contains(list.Body.String(), "checkCommand") || strings.Contains(list.Body.String(), "starterFiles") || strings.Contains(list.Body.String(), "hidden") {
+		t.Fatalf("family projection leaked execution internals: %s", list.Body.String())
+	}
+	var families contracts.TaskFamilies
+	if err := json.Unmarshal(list.Body.Bytes(), &families); err != nil {
+		t.Fatal(err)
+	}
+	if len(families.Families) != 15 {
+		t.Fatalf("family count = %d, want 15", len(families.Families))
+	}
+	rate, ok := findFamily(families, "task-family.rate-limiter")
+	if !ok || len(rate.Revisions) != 4 || !rate.Runnable {
+		t.Fatalf("rate limiter family = %#v", rate)
+	}
+	project, ok := findFamily(families, "task-family.project-book-boundary")
+	if !ok || project.Runnable || project.Revisions[0].Availability != "unreleased" {
+		t.Fatalf("project family = %#v", project)
+	}
+	detail := httptest.NewRecorder()
+	handler.ServeHTTP(detail, httptest.NewRequest(http.MethodGet, "/v1/task-families/task-family.rate-limiter", nil))
+	if detail.Code != http.StatusOK || !strings.Contains(detail.Body.String(), `"rubricRef":"rubric.rate-limiter.v1"`) {
+		t.Fatalf("family detail failed: %d %s", detail.Code, detail.Body.String())
+	}
+	unknown := httptest.NewRecorder()
+	handler.ServeHTTP(unknown, httptest.NewRequest(http.MethodGet, "/v1/task-families/task-family.missing", nil))
+	if unknown.Code != http.StatusNotFound {
+		t.Fatalf("unknown family status = %d", unknown.Code)
+	}
+}
+
+func findFamily(families contracts.TaskFamilies, key string) (contracts.TaskFamily, bool) {
+	for _, family := range families.Families {
+		if family.Key == key {
+			return family, true
+		}
+	}
+	return contracts.TaskFamily{}, false
 }
 
 func TestUnconfiguredManifestIsExplicitlyNonRunnable(t *testing.T) {

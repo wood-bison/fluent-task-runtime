@@ -114,6 +114,32 @@ func TestCatalogueLoadsImmutableReleaseManifestOverlay(t *testing.T) {
 	}
 }
 
+func TestCatalogueLoadsTaskFamiliesAndGroupsLanguageRevisions(t *testing.T) {
+	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-25-qb-d550846f-g3.json"))
+	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", filepath.Join("..", "..", "task-families", "manifest.json"))
+	catalogue, err := NewCatalogue()
+	if err != nil {
+		t.Fatal(err)
+	}
+	families := catalogue.TaskFamilies()
+	if families.ContractVersion != contracts.TaskFamilyContractVersion || len(families.Families) != 15 {
+		t.Fatalf("unexpected family release: %#v", families)
+	}
+	rate, ok := catalogue.TaskFamily("task-family.rate-limiter")
+	if !ok || len(rate.Revisions) != 4 || !rate.Runnable {
+		t.Fatalf("rate limiter family did not group four runnable revisions: %#v (ok=%v)", rate, ok)
+	}
+	project, ok := catalogue.TaskFamily("task-family.project-book-boundary")
+	if !ok || project.Runnable || project.Revisions[0].Availability != "unreleased" {
+		t.Fatalf("unreleased project family was advertised as runnable: %#v (ok=%v)", project, ok)
+	}
+	task, ok := catalogue.Task("node-rate-limiter-001", 1)
+	if !ok || task.TaskFamilyKey != "task-family.rate-limiter" || task.ImmutableHash == "" || task.Availability != "runnable" {
+		t.Fatalf("task revision did not receive family metadata: %#v (ok=%v)", task, ok)
+	}
+}
+
 func TestCatalogueOverlaysLegacyDescriptorReleaseMetadata(t *testing.T) {
 	root := t.TempDir()
 	taskRoot := filepath.Join(root, "legacy-task")
