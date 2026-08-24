@@ -68,6 +68,9 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 	if !ok {
 		return contracts.RunResponse{}, &ExecutionError{Code: "unknown_task", Message: fmt.Sprintf("task %q revision %d is not in the runtime catalogue", request.TaskID, request.TaskRevision), Status: 404}
 	}
+	if !e.catalogue.ReleaseBound() {
+		return contracts.RunResponse{}, &ExecutionError{Code: "question_release_not_bound", Message: "task execution requires an explicit runtime release manifest", Status: 503, Retryable: false}
+	}
 	if task.Status != "released" {
 		return contracts.RunResponse{}, &ExecutionError{Code: "runtime_not_ready", Message: fmt.Sprintf("task %q revision %d is not released", request.TaskID, request.TaskRevision), Status: 501}
 	}

@@ -90,7 +90,27 @@ The release ID is a content-release pin, not a live lookup. Updating a
 question creates a new Question Brain release and a new runtime release
 manifest; it must not silently change the evidence context of an old run. Set
 `RUNTIME_RELEASE_MANIFEST` to test a candidate manifest before publishing it.
-The default runtime and Compose image load the manifest from `releases/`.
+The checked-in manifest is a candidate fixture and is not loaded implicitly:
+the default runtime reports `manifest-not-configured` and exposes only the
+legacy descriptor projection with `runnable: false` until a release is
+explicitly selected. This compatibility view is non-runnable: readiness is
+degraded and both the workspace and run endpoints return `runtime_not_ready`.
+This is intentional while Question Brain is publishing a newer release. Set
+`RUNTIME_RELEASE_MANIFEST=/opt/releases/task-release-2026-08-24.json` in a
+controlled smoke to exercise this candidate; do not call it production-ready
+until its `questionReleaseId` matches the released Question Brain deployment.
+
+`GET /v1/tasks/summary` makes this state machine explicit. It returns
+`manifest-loaded` with the runtime and Question Brain release IDs when an
+overlay is selected, or `manifest-not-configured` when the runtime is serving
+compatibility descriptors. The response and each task include `runnable` so a
+client cannot mistake historical descriptors for an executable release.
+`GET /v1/tasks/{taskId}/workspace` returns the learner brief and starter files
+only once a release is selected; hidden tests and harness files never cross
+this API boundary. A released task without an authored `brief.md` is reported
+as `workspace_unavailable` rather than receiving a synthesized fallback; this
+currently keeps the project-book task closed until its learner brief is
+authored.
 
 ## Local development
 

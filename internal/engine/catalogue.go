@@ -17,14 +17,19 @@ import (
 // revisions will be added only after their image and harness digests are
 // verified; a profile cannot silently imply that every task is runnable.
 type Catalogue struct {
-	profiles  contracts.Profiles
-	tasks     contracts.Tasks
-	tasksRoot string
+	profiles        contracts.Profiles
+	tasks           contracts.Tasks
+	tasksRoot       string
+	releaseManifest *taskReleaseManifest
 }
 
 func NewCatalogue() (*Catalogue, error) {
 	tasksRoot := defaultTasksRoot()
-	tasks, err := loadTasks(tasksRoot)
+	releaseManifest, err := loadReleaseManifest()
+	if err != nil {
+		return nil, err
+	}
+	tasks, err := loadTasks(tasksRoot, releaseManifest)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +53,7 @@ func NewCatalogue() (*Catalogue, error) {
 			}
 		}
 	}
-	return &Catalogue{tasksRoot: tasksRoot, profiles: contracts.Profiles{
+	return &Catalogue{tasksRoot: tasksRoot, releaseManifest: releaseManifest, profiles: contracts.Profiles{
 		ContractVersion: contracts.ProfileContractVersion,
 		Profiles:        profiles,
 	}, tasks: contracts.Tasks{ContractVersion: contracts.TaskContractVersion, Tasks: tasks}}, nil
@@ -84,7 +89,6 @@ type taskDescriptor struct {
 const (
 	releaseManifestEnv      = "RUNTIME_RELEASE_MANIFEST"
 	releaseManifestContract = "fluent-task-runtime.task-release.v1"
-	releaseManifestName     = "task-release-2026-08-24.json"
 )
 
 type taskRevisionKey struct {
@@ -108,14 +112,10 @@ type taskReleaseManifest struct {
 	entries           map[taskRevisionKey]taskReleaseEntry
 }
 
-func loadTasks(root string) ([]contracts.Task, error) {
+func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.Task, error) {
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return nil, fmt.Errorf("read task catalogue %q: %w", root, err)
-	}
-	releaseManifest, err := loadReleaseManifest(root)
-	if err != nil {
-		return nil, err
 	}
 	ids := make([]string, 0, len(entries))
 	for _, entry := range entries {
@@ -179,7 +179,7 @@ func loadTasks(root string) ([]contracts.Task, error) {
 		}
 		tasks = append(tasks, contracts.Task{
 			ID: id, Revision: revision, Profile: descriptor.Profile, Runtime: descriptor.Runtime,
-			Image: descriptor.Image, Status: status, Network: "none", HiddenTests: true,
+			Image: descriptor.Image, Status: status, Runnable: releaseManifest != nil && status == "released", Network: "none", HiddenTests: true,
 			CheckCommand:  append([]string(nil), descriptor.CheckCommand...),
 			EditableFiles: append([]string(nil), descriptor.EditableFiles...),
 			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs, User: descriptor.User,
@@ -203,15 +203,12 @@ func loadTasks(root string) ([]contracts.Task, error) {
 	return tasks, nil
 }
 
-func loadReleaseManifest(root string) (*taskReleaseManifest, error) {
+func loadReleaseManifest() (*taskReleaseManifest, error) {
 	path := strings.TrimSpace(os.Getenv(releaseManifestEnv))
 	if path == "" {
-		path = filepath.Join(filepath.Dir(root), "releases", releaseManifestName)
-	}
-	body, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
 	}
+	body, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read release manifest %q: %w", path, err)
 	}
@@ -256,35 +253,31 @@ func mergeReleaseEntry(
 	manifestQuestionReleaseID string,
 	entry taskReleaseEntry,
 ) (string, []contracts.QuestionBinding, []string, []string, error) {
-	if questionReleaseID != "" && questionReleaseID != manifestQuestionReleaseID {
-		return "", nil, nil, nil, fmt.Errorf("task pins question release %q but release manifest pins %q", questionReleaseID, manifestQuestionReleaseID)
-	}
-	questionReleaseID = manifestQuestionReleaseID
-	if len(questionBindings) > 0 && !sameQuestionBindings(questionBindings, entry.QuestionBindings) {
+	// A release manifest is the immutable source of truth for the active
+	// release. Legacy descriptors retain the release that produced them, so
+	// their old questionReleaseId/questionKeys must not prevent generating a
+	// new overlay. A descriptor that already carries full immutable bindings is
+	// different: it is an integrity assertion and must agree with the manifest.
+	descriptorHasBindings := len(questionBindings) > 0
+	if descriptorHasBindings && !sameQuestionBindings(questionBindings, entry.QuestionBindings) {
 		return "", nil, nil, nil, errors.New("task descriptor questionBindings disagree with immutable release manifest")
 	}
-	if len(questionBindings) == 0 {
+	if !descriptorHasBindings {
 		questionBindings = append([]contracts.QuestionBinding(nil), entry.QuestionBindings...)
 	}
-	if len(capabilityKeys) > 0 && !sameStringSet(capabilityKeys, entry.CapabilityKeys) {
-		return "", nil, nil, nil, errors.New("task descriptor capabilityKeys disagree with immutable release manifest")
+	if descriptorHasBindings && questionReleaseID != "" && questionReleaseID != manifestQuestionReleaseID {
+		return "", nil, nil, nil, fmt.Errorf("task descriptor pins question release %q but immutable bindings belong to %q", questionReleaseID, manifestQuestionReleaseID)
 	}
-	if len(capabilityKeys) == 0 {
-		capabilityKeys = append([]string(nil), entry.CapabilityKeys...)
-	}
-	manifestQuestionKeys := questionKeysFromBindings(entry.QuestionBindings)
-	legacyQuestionKeys := questionOnlyKeys(questionKeys)
-	if len(legacyQuestionKeys) > 0 && !sameStringSet(legacyQuestionKeys, manifestQuestionKeys) {
-		return "", nil, nil, nil, errors.New("task descriptor questionKeys disagree with immutable release manifest")
-	}
-	legacyCapabilityKeys := capabilityOnlyKeys(questionKeys)
-	if len(legacyCapabilityKeys) > 0 && !sameStringSet(legacyCapabilityKeys, entry.CapabilityKeys) {
-		return "", nil, nil, nil, errors.New("task descriptor capability binding disagrees with immutable release manifest")
-	}
-	if len(questionKeys) == 0 {
-		questionKeys = append([]string(nil), manifestQuestionKeys...)
-	}
+	questionReleaseID = manifestQuestionReleaseID
+	capabilityKeys = append([]string(nil), entry.CapabilityKeys...)
+	questionKeys = manifestCompatibilityKeys(entry)
 	return questionReleaseID, questionBindings, questionKeys, capabilityKeys, nil
+}
+
+func manifestCompatibilityKeys(entry taskReleaseEntry) []string {
+	keys := questionKeysFromBindings(entry.QuestionBindings)
+	keys = append(keys, entry.CapabilityKeys...)
+	return keys
 }
 
 func validateQuestionBinding(
@@ -413,26 +406,6 @@ func questionKeysFromBindings(bindings []contracts.QuestionBinding) []string {
 	return result
 }
 
-func questionOnlyKeys(keys []string) []string {
-	result := make([]string, 0, len(keys))
-	for _, key := range keys {
-		if strings.HasPrefix(strings.TrimSpace(key), "question.") {
-			result = append(result, strings.TrimSpace(key))
-		}
-	}
-	return result
-}
-
-func capabilityOnlyKeys(keys []string) []string {
-	result := make([]string, 0, len(keys))
-	for _, key := range keys {
-		if strings.HasPrefix(strings.TrimSpace(key), "capability.") {
-			result = append(result, strings.TrimSpace(key))
-		}
-	}
-	return result
-}
-
 func sameQuestionBindings(left, right []contracts.QuestionBinding) bool {
 	if len(left) != len(right) {
 		return false
@@ -446,18 +419,6 @@ func sameQuestionBindings(left, right []contracts.QuestionBinding) bool {
 			}
 		}
 		if !found {
-			return false
-		}
-	}
-	return true
-}
-
-func sameStringSet(left, right []string) bool {
-	if len(left) != len(right) {
-		return false
-	}
-	for _, value := range left {
-		if !containsString(right, value) {
 			return false
 		}
 	}
@@ -501,6 +462,156 @@ func (c *Catalogue) Task(id string, revision int) (contracts.Task, bool) {
 		}
 	}
 	return contracts.Task{}, false
+}
+
+// LatestTask returns the highest revision for a task ID. Callers may still
+// request an exact revision through Task when reproducing an old run; the
+// HTTP layer decides whether a declared revision is ready for learners.
+func (c *Catalogue) LatestTask(id string) (contracts.Task, bool) {
+	var latest contracts.Task
+	found := false
+	for _, task := range c.tasks.Tasks {
+		if task.ID != id || (found && task.Revision <= latest.Revision) {
+			continue
+		}
+		latest = task
+		found = true
+	}
+	if !found {
+		return contracts.Task{}, false
+	}
+	return cloneTask(latest), true
+}
+
+// ReleaseBound reports whether an explicit, validated runtime release
+// manifest selected this catalogue. Descriptor-only compatibility data is
+// intentionally non-runnable.
+func (c *Catalogue) ReleaseBound() bool {
+	return c.releaseManifest != nil
+}
+
+// ReleaseSummary returns the release join without exposing task execution
+// internals. A missing manifest is explicit: descriptors may still be loaded
+// through the legacy compatibility path, but the catalogue is not a fully
+// bound Question Brain release.
+func (c *Catalogue) ReleaseSummary() contracts.TaskSummaryResponse {
+	state := "manifest-not-configured"
+	runtimeReleaseID := ""
+	questionReleaseID := ""
+	if c.releaseManifest != nil {
+		state = "manifest-loaded"
+		runtimeReleaseID = c.releaseManifest.ReleaseID
+		questionReleaseID = c.releaseManifest.QuestionReleaseID
+	}
+	result := contracts.TaskSummaryResponse{
+		ContractVersion:   contracts.TaskSummaryContractVersion,
+		BindingState:      state,
+		Runnable:          c.releaseManifest != nil,
+		RuntimeReleaseID:  runtimeReleaseID,
+		QuestionReleaseID: questionReleaseID,
+		Tasks:             make([]contracts.TaskSummary, 0, len(c.tasks.Tasks)),
+	}
+	for _, task := range c.tasks.Tasks {
+		bindingState := "unbound"
+		if len(task.QuestionBindings) > 0 {
+			bindingState = "full"
+		} else if len(task.CapabilityKeys) > 0 {
+			bindingState = "capability-only"
+		} else if len(task.QuestionKeys) > 0 {
+			bindingState = "legacy"
+		}
+		result.Tasks = append(result.Tasks, contracts.TaskSummary{
+			TaskID:            task.ID,
+			Revision:          task.Revision,
+			Status:            task.Status,
+			Runnable:          task.Runnable,
+			Profile:           task.Profile,
+			Runtime:           task.Runtime,
+			QuestionReleaseID: task.QuestionReleaseID,
+			QuestionBindings:  cloneQuestionBindings(task.QuestionBindings),
+			CapabilityKeys:    cloneStrings(task.CapabilityKeys),
+			BindingState:      bindingState,
+		})
+	}
+	return result
+}
+
+const (
+	workspaceBriefLimit = 256 * 1024
+	workspaceFileLimit  = 256 * 1024
+	workspaceTotalLimit = 2 * 1024 * 1024
+)
+
+// TaskWorkspace reads only learner-visible material from a released task.
+// The path is rooted at the catalogue entry and never traverses tests or
+// harness directories.
+func (c *Catalogue) TaskWorkspace(id string, revision int) (contracts.TaskWorkspace, error) {
+	if !c.ReleaseBound() {
+		return contracts.TaskWorkspace{}, errors.New("an explicit runtime release manifest is required")
+	}
+	task, found := c.Task(id, revision)
+	if !found {
+		return contracts.TaskWorkspace{}, fmt.Errorf("task %q revision %d is not in the runtime catalogue", id, revision)
+	}
+	if task.Status != "released" {
+		return contracts.TaskWorkspace{}, fmt.Errorf("task %q revision %d is not released", id, revision)
+	}
+	taskRoot := filepath.Join(c.tasksRoot, task.ID)
+	brief, err := readWorkspaceBounded(filepath.Join(taskRoot, "brief.md"), workspaceBriefLimit)
+	if err != nil {
+		return contracts.TaskWorkspace{}, fmt.Errorf("read task brief: %w", err)
+	}
+	starterRoot := filepath.Join(taskRoot, "starter")
+	starterFiles := make(map[string]string)
+	totalBytes := 0
+	if err := filepath.WalkDir(starterRoot, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		if entry.Type()&os.ModeSymlink != 0 {
+			return errors.New("task starter contains a symlink")
+		}
+		relative, err := filepath.Rel(starterRoot, path)
+		if err != nil || !safeRelativePath(filepath.ToSlash(relative)) {
+			return errors.New("task starter contains an unsafe path")
+		}
+		body, err := readWorkspaceBounded(path, workspaceFileLimit)
+		if err != nil {
+			return err
+		}
+		totalBytes += len(body)
+		if totalBytes > workspaceTotalLimit {
+			return errors.New("task starter exceeds the workspace size limit")
+		}
+		starterFiles[filepath.ToSlash(relative)] = string(body)
+		return nil
+	}); err != nil {
+		return contracts.TaskWorkspace{}, fmt.Errorf("read task starter: %w", err)
+	}
+	return contracts.TaskWorkspace{
+		ContractVersion: contracts.WorkspaceContractVersion,
+		TaskID:          task.ID,
+		Revision:        task.Revision,
+		Status:          task.Status,
+		Profile:         task.Profile,
+		Runtime:         task.Runtime,
+		Brief:           string(brief),
+		StarterFiles:    starterFiles,
+	}, nil
+}
+
+func readWorkspaceBounded(path string, limit int) ([]byte, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, errors.New("workspace file is not a regular file")
+	}
+	return readBounded(path, limit)
 }
 
 func cloneTask(task contracts.Task) contracts.Task {

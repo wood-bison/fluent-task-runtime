@@ -32,7 +32,7 @@ compatibility projection and may be removed only after all Lab clients consume
 
 ## Manifest and immutability
 
-The release manifest is [`../../releases/task-release-2026-08-24.json`](../../releases/task-release-2026-08-24.json).
+The candidate release manifest is [`../../releases/task-release-2026-08-24.json`](../../releases/task-release-2026-08-24.json).
 It has contract `fluent-task-runtime.task-release.v1` and contains one entry
 per released `(taskId, revision)` pair. The manifest pins one Question Brain
 release and the exact identity of each referenced revision:
@@ -43,12 +43,24 @@ release and the exact identity of each referenced revision:
 - `capabilityKeys` are explicit cross-system capability references and are
   never inferred from `breadcrumb`, `concepts`, or a task title.
 
-The loader applies this manifest as an overlay. Existing released `task.json`
+The loader applies this manifest as an overlay only when
+`RUNTIME_RELEASE_MANIFEST` is explicitly set. Existing released `task.json`
 files remain unchanged, so a historical execution context cannot be silently
-rewritten. If a descriptor and manifest both declare a value, they must agree;
-conflicts fail catalogue startup. A released task missing from an active
-manifest also fails startup. This makes a release incomplete rather than
-allowing a partially bound catalogue into the API.
+rewritten. The active manifest is authoritative for the legacy
+`questionReleaseId`/`questionKeys` projection; those old descriptor values do
+not block generating a new overlay. If a descriptor already contains full
+immutable `questionBindings`, a disagreement is an integrity error and fails
+catalogue startup. A released task missing from an active manifest also fails
+startup. This makes a release incomplete rather than allowing a partially
+bound catalogue into the API.
+
+The checked-in candidate currently points at
+`question-release-15e032d7b732f8c1`. It is intentionally not the default: if
+Question Brain has moved to another published release, the runtime must report
+`manifest-not-configured`/legacy compatibility rather than pretending that the
+old candidate is current. Generate a new manifest from the final published
+Question Brain release, verify every revision and hash, then select it through
+the deployment environment.
 
 For a future Question Brain release:
 
@@ -63,11 +75,22 @@ The runtime does not fetch Question Brain during a task run. Lab may fetch the
 referenced card for display, but it must verify the returned revision and hash
 against the binding before presenting the question as the task's context.
 
+`GET /v1/tasks/summary` reports whether an overlay is loaded and includes the
+runtime release ID, Question Brain release ID, binding state, and safe task
+metadata. With no explicit manifest the summary is `runnable: false`, the
+readiness probe is degraded, and both workspace and run requests return
+`runtime_not_ready`; descriptor compatibility is never a runnable fallback.
+`GET /v1/tasks/{taskId}/workspace` is the learner-material boundary: it returns
+`brief.md` and files under `starter/`, never `tests/`, hidden tests, or harness
+commands. If a released task has no authored `brief.md`, the endpoint returns
+`workspace_unavailable`; it does not invent a fallback brief.
+
 ## Compatibility policy
 
 Old descriptors may still contain `questionKeys` and `questionReleaseId` while
 the migration is in progress. They are accepted only as a read-only
-compatibility input and are projected into the new response. New release
+compatibility input and are projected into the new response. Without an
+explicit manifest they cannot make a task runnable. New release
 manifests require full `questionBindings` for question-backed tasks and valid
 `capabilityKeys` for capability-only tasks. Legacy identifiers such as `Q123`,
 `C123`, or `CAP-01` are rejected.

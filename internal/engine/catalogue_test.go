@@ -43,6 +43,16 @@ func TestCatalogueHonoursTaskReleaseMetadata(t *testing.T) {
 	if !ok || declared.Status != "declared" {
 		t.Fatalf("declared descriptor was not preserved: %#v (ok=%v)", declared, ok)
 	}
+	if summary := catalogue.ReleaseSummary(); summary.BindingState != "manifest-not-configured" || summary.Runnable || len(summary.Tasks) != 2 || summary.Tasks[0].Runnable || summary.Tasks[1].Runnable {
+		t.Fatalf("legacy compatibility state was not explicit: %#v", summary)
+	}
+}
+
+func TestCatalogueRejectsMissingExplicitReleaseManifest(t *testing.T) {
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join(t.TempDir(), "missing.json"))
+	if _, err := NewCatalogue(); err == nil || !strings.Contains(err.Error(), "read release manifest") {
+		t.Fatalf("missing explicitly selected release manifest was silently ignored: %v", err)
+	}
 }
 
 func TestCatalogueRejectsLegacyQuestionBindingsForReleasedTasks(t *testing.T) {
@@ -98,6 +108,33 @@ func TestCatalogueLoadsImmutableReleaseManifestOverlay(t *testing.T) {
 	}
 	if strings.Contains(string(body), "questionBindings") {
 		t.Fatal("old task revision was rewritten instead of using the release manifest")
+	}
+}
+
+func TestCatalogueOverlaysLegacyDescriptorReleaseMetadata(t *testing.T) {
+	root := t.TempDir()
+	taskRoot := filepath.Join(root, "legacy-task")
+	if err := os.MkdirAll(taskRoot, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	legacyDescriptor := `{"taskId":"legacy-task","revision":7,"status":"released","profile":"node","runtime":"Node.js 24","image":"fluent-runtime-task-node:1","checkCommand":["node"],"editableFiles":["main.js"],"timeoutMs":20000,"memoryMb":512,"cpus":1,"questionKeys":["question.q777"],"questionReleaseId":"question-release-15e032d7b732f8c1"}`
+	if err := os.WriteFile(filepath.Join(taskRoot, "task.json"), []byte(legacyDescriptor), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	manifest := `{"contractVersion":"fluent-task-runtime.task-release.v1","releaseId":"runtime-task-release-new","questionReleaseId":"question-release-aaaaaaaaaaaaaaaa","tasks":[{"taskId":"legacy-task","revision":7,"questionBindings":[{"stableKey":"question.q999","revisionId":"11111111-1111-4111-8111-111111111111","contentHash":"` + strings.Repeat("a", 64) + `"}],"capabilityKeys":[]}]}`
+	manifestPath := filepath.Join(root, "release.json")
+	if err := os.WriteFile(manifestPath, []byte(manifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("RUNTIME_TASKS_ROOT", root)
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", manifestPath)
+	catalogue, err := NewCatalogue()
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, ok := catalogue.Task("legacy-task", 7)
+	if !ok || !task.Runnable || task.QuestionReleaseID != "question-release-aaaaaaaaaaaaaaaa" || len(task.QuestionBindings) != 1 || task.QuestionBindings[0].StableKey != "question.q999" || len(task.QuestionKeys) != 1 || task.QuestionKeys[0] != "question.q999" {
+		t.Fatalf("new release did not overlay historical descriptor metadata: %#v (ok=%v)", task, ok)
 	}
 }
 

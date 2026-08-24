@@ -3,10 +3,12 @@ package contracts
 import "time"
 
 const (
-	HealthContractVersion  = "fluent-task-runtime.health.v1"
-	ProfileContractVersion = "fluent-task-runtime.profiles.v1"
-	TaskContractVersion    = "fluent-task-runtime.tasks.v1"
-	RunContractVersion     = "fluent-task-runtime.run.v1"
+	HealthContractVersion      = "fluent-task-runtime.health.v1"
+	ProfileContractVersion     = "fluent-task-runtime.profiles.v1"
+	TaskContractVersion        = "fluent-task-runtime.tasks.v1"
+	TaskSummaryContractVersion = "fluent-task-runtime.task-summary.v1"
+	WorkspaceContractVersion   = "fluent-task-runtime.task-workspace.v1"
+	RunContractVersion         = "fluent-task-runtime.run.v1"
 )
 
 type Health struct {
@@ -53,6 +55,7 @@ type Task struct {
 	Runtime       string   `json:"runtime"`
 	Image         string   `json:"image"`
 	Status        string   `json:"status"`
+	Runnable      bool     `json:"runnable"`
 	Network       string   `json:"network"`
 	HiddenTests   bool     `json:"hiddenTests"`
 	CheckCommand  []string `json:"checkCommand,omitempty"`
@@ -77,6 +80,44 @@ type Task struct {
 type Tasks struct {
 	ContractVersion string `json:"contractVersion"`
 	Tasks           []Task `json:"tasks"`
+}
+
+// TaskSummary is the release-facing part of a task descriptor. It deliberately
+// omits executable commands and sandbox paths so callers can inspect release
+// joins without receiving execution internals.
+type TaskSummary struct {
+	TaskID            string            `json:"taskId"`
+	Revision          int               `json:"revision"`
+	Status            string            `json:"status"`
+	Runnable          bool              `json:"runnable"`
+	Profile           string            `json:"profile"`
+	Runtime           string            `json:"runtime"`
+	QuestionReleaseID string            `json:"questionReleaseId,omitempty"`
+	QuestionBindings  []QuestionBinding `json:"questionBindings"`
+	CapabilityKeys    []string          `json:"capabilityKeys"`
+	BindingState      string            `json:"bindingState"`
+}
+
+type TaskSummaryResponse struct {
+	ContractVersion   string        `json:"contractVersion"`
+	BindingState      string        `json:"bindingState"`
+	Runnable          bool          `json:"runnable"`
+	RuntimeReleaseID  string        `json:"runtimeReleaseId,omitempty"`
+	QuestionReleaseID string        `json:"questionReleaseId,omitempty"`
+	Tasks             []TaskSummary `json:"tasks"`
+}
+
+// TaskWorkspace contains only learner-visible task material. Hidden tests,
+// test harnesses, image names and execution commands are intentionally absent.
+type TaskWorkspace struct {
+	ContractVersion string            `json:"contractVersion"`
+	TaskID          string            `json:"taskId"`
+	Revision        int               `json:"revision"`
+	Status          string            `json:"status"`
+	Profile         string            `json:"profile"`
+	Runtime         string            `json:"runtime"`
+	Brief           string            `json:"brief"`
+	StarterFiles    map[string]string `json:"starterFiles"`
 }
 
 type RuntimeError struct {

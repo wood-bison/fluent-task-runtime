@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +33,8 @@ func NewServer(catalogue *engine.Catalogue, executors ...engine.RunExecutor) htt
 	mux.HandleFunc("GET /v1/health/ready", server.ready)
 	mux.HandleFunc("GET /v1/profiles", server.profiles)
 	mux.HandleFunc("GET /v1/tasks", server.tasks)
+	mux.HandleFunc("GET /v1/tasks/summary", server.taskSummary)
+	mux.HandleFunc("GET /v1/tasks/{taskId}/workspace", server.workspace)
 	mux.HandleFunc("POST /v1/runs", server.runs)
 	return requestLog(mux)
 }
@@ -52,13 +55,29 @@ func (s *Server) ready(w http.ResponseWriter, _ *http.Request) {
 	if provider, ok := s.executor.(interface{ Ready(context.Context) string }); ok {
 		sandbox = provider.Ready(context.Background())
 	}
-	writeJSON(w, http.StatusOK, contracts.Health{
+	release := s.catalogue.ReleaseSummary()
+	questionRelease := release.QuestionReleaseID
+	if questionRelease == "" {
+		questionRelease = "descriptor-compatibility-only"
+	}
+	status := http.StatusOK
+	state := "ready"
+	if !release.Runnable {
+		status = http.StatusServiceUnavailable
+		state = "degraded"
+	}
+	writeJSON(w, status, contracts.Health{
 		ContractVersion: contracts.HealthContractVersion,
 		Service:         "fluent-task-runtime",
-		State:           "ready",
-		Ready:           true,
-		Dependencies:    map[string]string{"catalogue": "ready", "sandbox": sandbox},
-		CheckedAt:       time.Now().UTC(),
+		State:           state,
+		Ready:           release.Runnable,
+		Dependencies: map[string]string{
+			"catalogue":        "ready",
+			"sandbox":          sandbox,
+			"questionBindings": release.BindingState,
+			"questionRelease":  questionRelease,
+		},
+		CheckedAt: time.Now().UTC(),
 	})
 }
 
@@ -68,6 +87,49 @@ func (s *Server) profiles(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) tasks(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, s.catalogue.Tasks())
+}
+
+func (s *Server) taskSummary(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, s.catalogue.ReleaseSummary())
+}
+
+func (s *Server) workspace(w http.ResponseWriter, r *http.Request) {
+	taskID := strings.TrimSpace(r.PathValue("taskId"))
+	if taskID == "" {
+		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "invalid_request", Message: "taskId is required", Retryable: false})
+		return
+	}
+	if !s.catalogue.ReleaseBound() {
+		writeJSON(w, http.StatusServiceUnavailable, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "runtime_not_ready", Message: "task workspace requires an explicit runtime release manifest", Retryable: false})
+		return
+	}
+	var task contracts.Task
+	var found bool
+	revisionText := strings.TrimSpace(r.URL.Query().Get("revision"))
+	if revisionText == "" {
+		task, found = s.catalogue.LatestTask(taskID)
+	} else {
+		revision, err := strconv.Atoi(revisionText)
+		if err != nil || revision < 1 {
+			writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "invalid_request", Message: "revision must be a positive integer", Retryable: false})
+			return
+		}
+		task, found = s.catalogue.Task(taskID, revision)
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "unknown_task", Message: "task revision is not in the runtime catalogue", Retryable: false})
+		return
+	}
+	if task.Status != "released" {
+		writeJSON(w, http.StatusNotImplemented, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "runtime_not_ready", Message: "task workspace is not released for this revision", Retryable: false})
+		return
+	}
+	workspace, err := s.catalogue.TaskWorkspace(task.ID, task.Revision)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "workspace_unavailable", Message: "learner workspace could not be loaded", Retryable: false})
+		return
+	}
+	writeJSON(w, http.StatusOK, workspace)
 }
 
 func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +143,10 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.TrimSpace(request.TaskID) == "" || request.TaskRevision < 1 {
 		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "invalid_request", Message: "taskId and positive taskRevision are required", Retryable: false})
+		return
+	}
+	if !s.catalogue.ReleaseBound() {
+		writeJSON(w, http.StatusServiceUnavailable, contracts.RuntimeError{ContractVersion: contracts.RunContractVersion, Code: "question_release_not_bound", Message: "task execution requires an explicit runtime release manifest", Retryable: false})
 		return
 	}
 	span.SetAttributes(
