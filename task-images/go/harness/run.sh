@@ -8,15 +8,20 @@ bash /hidden-tests/tests/check.sh
 status=$?
 set -e
 if [[ "$status" -eq 0 ]]; then state=pass; else state=fail; fi
+if [[ "$state" == "fail" ]]; then
+  message=', "message": "The submitted Go solution failed one or more checks."'
+else
+  message=''
+fi
 cat > "$output" <<EOF
 {
   "version": 2,
   "status": "$state",
   "tests": [
-    {"name": "allows requests inside the configured burst", "status": "$state"},
-    {"name": "refills tokens over elapsed time", "status": "$state"},
-    {"name": "isolates independent keys", "status": "$state"},
-    {"name": "rejects requests after the bucket is empty", "status": "$state"}
+    {"name": "allows requests inside the configured burst", "status": "$state"$message},
+    {"name": "refills tokens over elapsed time", "status": "$state"$message},
+    {"name": "isolates independent keys", "status": "$state"$message},
+    {"name": "rejects requests after the bucket is empty", "status": "$state"$message}
   ]
 }
 EOF
