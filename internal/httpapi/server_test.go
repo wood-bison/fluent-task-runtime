@@ -15,7 +15,7 @@ import (
 
 func testCatalogue(t *testing.T) *engine.Catalogue {
 	t.Helper()
-	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_TASKS_ROOT", historicalTasksRoot(t))
 	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-24.json"))
 	catalogue, err := engine.NewCatalogue()
 	if err != nil {
@@ -26,9 +26,9 @@ func testCatalogue(t *testing.T) *engine.Catalogue {
 
 func testFamilyCatalogue(t *testing.T) *engine.Catalogue {
 	t.Helper()
-	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_TASKS_ROOT", historicalTasksRoot(t))
 	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-25-qb-d550846f-g3.json"))
-	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", filepath.Join("..", "..", "task-families", "manifest.json"))
+	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", historicalTaskFamilyManifest(t))
 	catalogue, err := engine.NewCatalogue()
 	if err != nil {
 		t.Fatal(err)
@@ -150,9 +150,9 @@ func TestTaskFamilyProjectionHidesExecutionInternals(t *testing.T) {
 }
 
 func TestG8SummaryProjectsAllReleasePins(t *testing.T) {
-	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_TASKS_ROOT", historicalTasksRoot(t))
 	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-25-qb-d00a1493-g8.json"))
-	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", filepath.Join("..", "..", "task-families", "manifest.json"))
+	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", historicalTaskFamilyManifest(t))
 	catalogue, err := engine.NewCatalogue()
 	if err != nil {
 		t.Fatal(err)
