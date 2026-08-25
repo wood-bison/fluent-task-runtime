@@ -26,14 +26,15 @@ published Event Loop bridge:
   descriptor is `declared` until its own harness proof lands;
 - every released task carries the exact Question Brain release ID. The
   active immutable revision identity is supplied by
-  [`releases/task-release-2026-08-25-qb-d550846f-g3.json`](releases/task-release-2026-08-25-qb-d550846f-g3.json):
+  [`releases/task-release-2026-08-25-qb-d00a1493-g8.json`](releases/task-release-2026-08-25-qb-d00a1493-g8.json):
   each entry pins `stableKey`, Question Brain `revisionId`, and
-  `contentHash`, and exposes explicit `capabilityKeys` for the executable
-  station crosswalk. The older `questionKeys` property remains a read-only
-  projection for Lab clients that have not yet migrated; it is never used to
-  replace a full binding. The runtime rejects malformed or conflicting
-  bindings at catalogue load, while Lab exposes a server-side relation audit
-  at `/api/runtime/relations`;
+  `contentHash`, names its `taskFamilyKey`, and exposes explicit
+  `capabilityKeys` for the executable station crosswalk. The older
+  `questionKeys` property remains a read-only projection for historical Lab
+  clients; the v3 generator and Lab adapter never use it as an authoritative
+  join. The runtime rejects malformed or conflicting bindings at catalogue
+  load, while Lab exposes a server-side relation audit at
+  `/api/runtime/relations`;
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
   versioned result envelope;
@@ -56,7 +57,7 @@ truthful `runtime_not_ready` response rather than a fake pass or a
 browser-owned verdict.
 
 The release smoke is recorded in
-[`docs/verification/runtime-release-2026-08-22.json`](docs/verification/runtime-release-2026-08-22.json).
+[`docs/verification/G8-RELEASE-JOIN-2026-08-25.md`](docs/verification/G8-RELEASE-JOIN-2026-08-25.md).
 
 ## Boundaries
 
@@ -88,7 +89,7 @@ only when the runtime loads the immutable catalogue.
 }
 ```
 
-For compatibility, `questionKeys` is the ordered union of the binding
+For historical compatibility, `questionKeys` is the ordered union of the binding
 `stableKey` values and the `capabilityKeys` values. Therefore a live task may
 contain both `question.q315` and a hierarchical key such as
 `capability.distributed-systems.rate-limiter`; clients must use
@@ -99,19 +100,23 @@ question creates a new Question Brain release and a new runtime release
 manifest; it must not silently change the evidence context of an old run. Set
 `RUNTIME_RELEASE_MANIFEST` to test a candidate manifest before publishing it.
 The local Compose stack selects
-`/opt/releases/task-release-2026-08-25-qb-d550846f-g3.json`, whose
-`questionReleaseId` matches the current Question Brain deployment. There is no
-implicit legacy fallback: without an explicit manifest the runtime reports
+`/opt/releases/task-release-2026-08-25-qb-d00a1493-g8.json`, whose
+`questionReleaseId`, capability registry/binding IDs, and TaskFamily release
+match the current Question Brain and Task Runtime deployments. There is no
+implicit legacy fallback: without an explicit v3 manifest the runtime reports
 `manifest-not-configured`, readiness is degraded, and workspace/run requests
 return `runtime_not_ready`.
 
-`GET /v1/tasks/summary` makes this state machine explicit. It returns
-`manifest-loaded` with the runtime and Question Brain release IDs when an
-overlay is selected, or `manifest-not-configured` when the runtime is serving
-compatibility descriptors. The response and each task include `runnable` so a
-client cannot mistake historical descriptors for an executable release. The
-capability key is the only accepted join into Lab's station taxonomy; it is
-never inferred from a task title or breadcrumb.
+`GET /v1/tasks/summary` makes this state machine explicit. The v3 response
+returns `manifest-loaded` with the runtime, Question Brain source snapshot,
+capability binding/registry, and TaskFamily release IDs when an overlay is
+selected, or `manifest-not-configured` when the runtime is serving historical
+descriptors. The response and each task include `runnable` so a client cannot
+mistake an unreleased family for an executable revision. The capability key is
+the only accepted join into Lab's station taxonomy; it is never inferred from
+a task title or breadcrumb. See
+[`docs/contracts/task-release.v3.md`](docs/contracts/task-release.v3.md) for the
+complete contract and fail-closed rules.
 `GET /v1/tasks/{taskId}/workspace` returns the learner brief and starter files
 only once a release is selected; hidden tests and harness files never cross
 this API boundary. A released task without an authored `brief.md` is reported

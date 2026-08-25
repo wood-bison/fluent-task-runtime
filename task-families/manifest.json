@@ -137,7 +137,7 @@
       "key": "task-family.project-book-boundary",
       "title": { "en": "Project book: server-owned boundary", "ru": "Проектная книга: граница владения сервером" },
       "brief": { "en": "Make the execution boundary explicit before this project becomes runnable.", "ru": "Сделайте границу исполнения явной до открытия этого проекта." },
-      "capabilityKeys": ["capability.tier1-capstone"],
+      "capabilityKeys": ["capability.delivery-observability.execution-boundary"],
       "rubricRef": "rubric.project-book-boundary.v1",
       "status": "unreleased",
       "revisions": [{ "taskId": "project-book-boundary-001", "revision": 1, "language": "typescript", "profile": "node", "availability": "unreleased", "immutableHash": "75150f23f289509203f2551ed67c31d80990a6bab9489874a1440ac0b77fa4bf" }]

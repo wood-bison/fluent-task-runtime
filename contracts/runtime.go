@@ -107,12 +107,16 @@ type TaskSummary struct {
 }
 
 type TaskSummaryResponse struct {
-	ContractVersion   string        `json:"contractVersion"`
-	BindingState      string        `json:"bindingState"`
-	Runnable          bool          `json:"runnable"`
-	RuntimeReleaseID  string        `json:"runtimeReleaseId,omitempty"`
-	QuestionReleaseID string        `json:"questionReleaseId,omitempty"`
-	Tasks             []TaskSummary `json:"tasks"`
+	ContractVersion             string        `json:"contractVersion"`
+	BindingState                string        `json:"bindingState"`
+	Runnable                    bool          `json:"runnable"`
+	RuntimeReleaseID            string        `json:"runtimeReleaseId,omitempty"`
+	QuestionReleaseID           string        `json:"questionReleaseId,omitempty"`
+	QuestionSourceSnapshotID    string        `json:"questionSourceSnapshotId,omitempty"`
+	CapabilityBindingReleaseID  string        `json:"capabilityBindingReleaseId,omitempty"`
+	CapabilityRegistryReleaseID string        `json:"capabilityRegistryReleaseId,omitempty"`
+	TaskFamilyReleaseID         string        `json:"taskFamilyReleaseId,omitempty"`
+	Tasks                       []TaskSummary `json:"tasks"`
 }
 
 // TaskFamilyRevision is a safe learner-facing projection of one executable

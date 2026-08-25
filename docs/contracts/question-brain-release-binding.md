@@ -4,6 +4,15 @@ The task runtime owns executable task revisions. Question Brain owns question
 content and content releases. This contract joins them without sharing a
 database or copying question prose into the runtime repository.
 
+> **Current production contract (2026-08-25):** the active join is
+> [`task-release-2026-08-25-qb-d00a1493-g8.json`](../../releases/task-release-2026-08-25-qb-d00a1493-g8.json),
+> contract `fluent-task-runtime.task-release.v3`. It pins the Question Brain
+> source snapshot, capability binding/registry releases, and TaskFamily
+> release in addition to the exact question revision/hash bindings. The
+> v1/v2 examples below are immutable migration history only; they are not a
+> production fallback. See [`task-release.v3.md`](task-release.v3.md) for the
+> normative current contract.
+
 ## Runtime response
 
 `GET /v1/tasks` returns the following metadata for a released revision:
@@ -38,7 +47,7 @@ may be removed only after all Lab clients consume `questionBindings` and
 
 ## Manifest and immutability
 
-The candidate release manifest is [`../../releases/task-release-2026-08-24.json`](../../releases/task-release-2026-08-24.json).
+The historical candidate release manifest is [`../../releases/task-release-2026-08-24.json`](../../releases/task-release-2026-08-24.json).
 It has contract `fluent-task-runtime.task-release.v1` and contains one entry
 per released `(taskId, revision)` pair. The manifest pins one Question Brain
 release and the exact identity of each referenced revision:
@@ -92,19 +101,22 @@ python3 scripts/release/generate-question-release.py \\
   --output releases/task-release-YYYY-MM-DD-qb-<release-suffix>.json
 ```
 
-The generator reads `capabilityKeys` from `tasks/<taskId>/task.json` and
-copies them into the immutable release. This keeps the task brief and its
-reviewed Lab-station join in one author-owned descriptor. A capability can be
-shared by multiple language revisions (for example, the Node.js, Go, Java and
-PostgreSQL rate-limiter tasks) without pretending that their source code is
-interchangeable.
+The current v3 generator reads the released Question Brain API and the
+released TaskFamily API first, then uses authored descriptors only for the
+task source identity. A family-level capability snapshot is preferred over a
+descriptor breadcrumb. It copies no question prose and requires every
+question binding to resolve to a published production card. A capability can
+be shared by multiple language revisions (for example, the Node.js, Go, Java
+and PostgreSQL rate-limiter tasks) without pretending that their source code
+is interchangeable.
 
 The runtime does not fetch Question Brain during a task run. Lab may fetch the
 referenced card for display, but it must verify the returned revision and hash
 against the binding before presenting the question as the task's context.
 
 `GET /v1/tasks/summary` reports whether an overlay is loaded and includes the
-runtime release ID, Question Brain release ID, binding state, and safe task
+runtime release ID, Question Brain source snapshot, capability binding and
+registry release IDs, TaskFamily release ID, binding state, and safe task
 metadata. With no explicit manifest the summary is `runnable: false`, the
 readiness probe is degraded, and both workspace and run requests return
 `runtime_not_ready`; descriptor compatibility is never a runnable fallback.

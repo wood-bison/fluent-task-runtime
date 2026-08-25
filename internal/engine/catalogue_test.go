@@ -140,6 +140,40 @@ func TestCatalogueLoadsTaskFamiliesAndGroupsLanguageRevisions(t *testing.T) {
 	}
 }
 
+func TestCatalogueLoadsG8ReleaseJoinAndCapabilitySnapshot(t *testing.T) {
+	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-25-qb-d00a1493-g8.json"))
+	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", filepath.Join("..", "..", "task-families", "manifest.json"))
+	catalogue, err := NewCatalogue()
+	if err != nil {
+		t.Fatal(err)
+	}
+	summary := catalogue.ReleaseSummary()
+	if summary.RuntimeReleaseID != "runtime-task-release-2026-08-25-qb-d00a1493-g8" ||
+		summary.QuestionReleaseID != "question-release-d00a14931e607336" ||
+		summary.CapabilityBindingReleaseID != "question-capability-release-3c38b4c8c0fa7f47" ||
+		summary.CapabilityRegistryReleaseID != "capability-registry-2026-08-25-v3" ||
+		summary.TaskFamilyReleaseID != "task-family-release-2026-08-25" {
+		t.Fatalf("G8 release pins were not projected: %#v", summary)
+	}
+	project, ok := catalogue.Task("project-book-boundary-001", 1)
+	if !ok || project.Runnable || len(project.QuestionBindings) != 0 || len(project.CapabilityKeys) != 1 || project.CapabilityKeys[0] != "capability.delivery-observability.execution-boundary" {
+		t.Fatalf("capability-only project join was not explicit: %#v (ok=%v)", project, ok)
+	}
+}
+
+func TestCatalogueRejectsCapabilityOutsideG8PinnedRegistry(t *testing.T) {
+	manifestPath := filepath.Join(t.TempDir(), "release.json")
+	manifest := `{"contractVersion":"fluent-task-runtime.task-release.v3","releaseId":"runtime-task-release-test","workspaceKey":"fluent-interview","questionBrainContractVersion":"question-brain.release.v1","questionReleaseId":"question-release-aaaaaaaaaaaaaaaa","questionSourceSnapshotId":"question-release-aaaaaaaaaaaaaaaa","capabilityBindingReleaseId":"question-capability-release-aaaaaaaaaaaaaaaa","capabilityRegistryReleaseId":"capability-registry-test","capabilityKeys":["capability.valid-key"],"taskFamilyReleaseId":"task-family-test","tasks":[{"taskId":"task","revision":1,"taskFamilyKey":"task-family.task","questionBindings":[],"capabilityKeys":["capability.not-in-snapshot"]}]}`
+	if err := os.WriteFile(manifestPath, []byte(manifest), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", manifestPath)
+	if _, err := loadReleaseManifest(); err == nil || !strings.Contains(err.Error(), "outside pinned registry") {
+		t.Fatalf("capability outside the pinned registry was accepted: %v", err)
+	}
+}
+
 func TestCatalogueOverlaysLegacyDescriptorReleaseMetadata(t *testing.T) {
 	root := t.TempDir()
 	taskRoot := filepath.Join(root, "legacy-task")

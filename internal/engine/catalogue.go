@@ -110,8 +110,10 @@ type taskDescriptor struct {
 
 const (
 	releaseManifestEnv        = "RUNTIME_RELEASE_MANIFEST"
+	workspaceKeyEnv           = "RUNTIME_WORKSPACE_KEY"
 	releaseManifestContract   = "fluent-task-runtime.task-release.v1"
 	releaseManifestContractV2 = "fluent-task-runtime.task-release.v2"
+	releaseManifestContractV3 = "fluent-task-runtime.task-release.v3"
 )
 
 type taskRevisionKey struct {
@@ -129,12 +131,18 @@ type taskReleaseEntry struct {
 }
 
 type taskReleaseManifest struct {
-	ContractVersion     string             `json:"contractVersion"`
-	ReleaseID           string             `json:"releaseId"`
-	QuestionReleaseID   string             `json:"questionReleaseId"`
-	TaskFamilyReleaseID string             `json:"taskFamilyReleaseId,omitempty"`
-	Tasks               []taskReleaseEntry `json:"tasks"`
-	entries             map[taskRevisionKey]taskReleaseEntry
+	ContractVersion              string             `json:"contractVersion"`
+	ReleaseID                    string             `json:"releaseId"`
+	WorkspaceKey                 string             `json:"workspaceKey,omitempty"`
+	QuestionBrainContractVersion string             `json:"questionBrainContractVersion,omitempty"`
+	QuestionReleaseID            string             `json:"questionReleaseId"`
+	QuestionSourceSnapshotID     string             `json:"questionSourceSnapshotId,omitempty"`
+	CapabilityBindingReleaseID   string             `json:"capabilityBindingReleaseId,omitempty"`
+	CapabilityRegistryReleaseID  string             `json:"capabilityRegistryReleaseId,omitempty"`
+	CapabilityKeys               []string           `json:"capabilityKeys,omitempty"`
+	TaskFamilyReleaseID          string             `json:"taskFamilyReleaseId,omitempty"`
+	Tasks                        []taskReleaseEntry `json:"tasks"`
+	entries                      map[taskRevisionKey]taskReleaseEntry
 }
 
 func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.Task, error) {
@@ -246,7 +254,7 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 	if err := json.Unmarshal(body, &manifest); err != nil {
 		return nil, fmt.Errorf("decode release manifest %q: %w", path, err)
 	}
-	if manifest.ContractVersion != releaseManifestContract && manifest.ContractVersion != releaseManifestContractV2 {
+	if manifest.ContractVersion != releaseManifestContract && manifest.ContractVersion != releaseManifestContractV2 && manifest.ContractVersion != releaseManifestContractV3 {
 		return nil, fmt.Errorf("release manifest %q has unsupported contractVersion %q", path, manifest.ContractVersion)
 	}
 	if strings.TrimSpace(manifest.ReleaseID) == "" {
@@ -257,6 +265,36 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 	}
 	if manifest.ContractVersion == releaseManifestContractV2 && strings.TrimSpace(manifest.TaskFamilyReleaseID) == "" {
 		return nil, fmt.Errorf("release manifest %q must declare taskFamilyReleaseId for contract v2", path)
+	}
+	if manifest.ContractVersion == releaseManifestContractV3 {
+		workspaceKey := strings.TrimSpace(os.Getenv(workspaceKeyEnv))
+		if workspaceKey == "" {
+			workspaceKey = "fluent-interview"
+		}
+		if strings.TrimSpace(manifest.WorkspaceKey) != workspaceKey {
+			return nil, fmt.Errorf("release manifest %q pins workspace %q instead of %q", path, manifest.WorkspaceKey, workspaceKey)
+		}
+		if manifest.QuestionBrainContractVersion != "question-brain.release.v1" || strings.TrimSpace(manifest.QuestionSourceSnapshotID) == "" {
+			return nil, fmt.Errorf("release manifest %q must pin the Question Brain release contract and source snapshot", path)
+		}
+		if strings.TrimSpace(manifest.CapabilityBindingReleaseID) == "" || strings.TrimSpace(manifest.CapabilityRegistryReleaseID) == "" {
+			return nil, fmt.Errorf("release manifest %q must pin capability binding and registry releases", path)
+		}
+		if strings.TrimSpace(manifest.TaskFamilyReleaseID) == "" {
+			return nil, fmt.Errorf("release manifest %q must declare taskFamilyReleaseId for contract v3", path)
+		}
+		validated, err := validateCapabilityKeys(manifest.CapabilityKeys)
+		if err != nil || len(validated) == 0 {
+			if err != nil {
+				return nil, fmt.Errorf("release manifest %q capability snapshot: %w", path, err)
+			}
+			return nil, fmt.Errorf("release manifest %q must declare a non-empty capability snapshot", path)
+		}
+		manifest.CapabilityKeys = validated
+	}
+	capabilitySnapshot := make(map[string]struct{}, len(manifest.CapabilityKeys))
+	for _, key := range manifest.CapabilityKeys {
+		capabilitySnapshot[key] = struct{}{}
 	}
 	manifest.entries = make(map[taskRevisionKey]taskReleaseEntry, len(manifest.Tasks))
 	for index, entry := range manifest.Tasks {
@@ -271,8 +309,23 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 		if entry.QuestionReleaseID != "" && entry.QuestionReleaseID != manifest.QuestionReleaseID {
 			return nil, fmt.Errorf("release manifest %q entry %s@%d pins question release %q instead of %q", path, entry.TaskID, entry.Revision, entry.QuestionReleaseID, manifest.QuestionReleaseID)
 		}
-		if manifest.ContractVersion == releaseManifestContractV2 && !taskFamilyKeyPattern.MatchString(strings.TrimSpace(entry.TaskFamilyKey)) {
+		if (manifest.ContractVersion == releaseManifestContractV2 || manifest.ContractVersion == releaseManifestContractV3) && !taskFamilyKeyPattern.MatchString(strings.TrimSpace(entry.TaskFamilyKey)) {
 			return nil, fmt.Errorf("release manifest %q entry %s@%d must pin one TaskFamily", path, entry.TaskID, entry.Revision)
+		}
+		if manifest.ContractVersion == releaseManifestContractV3 {
+			validated, err := validateCapabilityKeys(entry.CapabilityKeys)
+			if err != nil {
+				return nil, fmt.Errorf("release manifest %q entry %s@%d: %w", path, entry.TaskID, entry.Revision, err)
+			}
+			for _, key := range validated {
+				if _, ok := capabilitySnapshot[key]; !ok {
+					return nil, fmt.Errorf("release manifest %q entry %s@%d references capability %q outside pinned registry %q", path, entry.TaskID, entry.Revision, key, manifest.CapabilityRegistryReleaseID)
+				}
+			}
+			if len(entry.QuestionBindings) == 0 && len(validated) == 0 {
+				return nil, fmt.Errorf("release manifest %q entry %s@%d must declare questionBindings or capabilityKeys", path, entry.TaskID, entry.Revision)
+			}
+			entry.CapabilityKeys = validated
 		}
 		if _, _, _, err := validateQuestionBinding(entry.QuestionBindings, nil, entry.CapabilityKeys, manifest.QuestionReleaseID, "released"); err != nil {
 			return nil, fmt.Errorf("release manifest %q entry %s@%d: %w", path, entry.TaskID, entry.Revision, err)
@@ -540,12 +593,16 @@ func (c *Catalogue) ReleaseSummary() contracts.TaskSummaryResponse {
 		questionReleaseID = c.releaseManifest.QuestionReleaseID
 	}
 	result := contracts.TaskSummaryResponse{
-		ContractVersion:   contracts.TaskSummaryContractVersion,
-		BindingState:      state,
-		Runnable:          c.releaseManifest != nil,
-		RuntimeReleaseID:  runtimeReleaseID,
-		QuestionReleaseID: questionReleaseID,
-		Tasks:             make([]contracts.TaskSummary, 0, len(c.tasks.Tasks)),
+		ContractVersion:             contracts.TaskSummaryContractVersion,
+		BindingState:                state,
+		Runnable:                    c.releaseManifest != nil,
+		RuntimeReleaseID:            runtimeReleaseID,
+		QuestionReleaseID:           questionReleaseID,
+		QuestionSourceSnapshotID:    releaseManifestField(c.releaseManifest, func(manifest *taskReleaseManifest) string { return manifest.QuestionSourceSnapshotID }),
+		CapabilityBindingReleaseID:  releaseManifestField(c.releaseManifest, func(manifest *taskReleaseManifest) string { return manifest.CapabilityBindingReleaseID }),
+		CapabilityRegistryReleaseID: releaseManifestField(c.releaseManifest, func(manifest *taskReleaseManifest) string { return manifest.CapabilityRegistryReleaseID }),
+		TaskFamilyReleaseID:         releaseManifestField(c.releaseManifest, func(manifest *taskReleaseManifest) string { return manifest.TaskFamilyReleaseID }),
+		Tasks:                       make([]contracts.TaskSummary, 0, len(c.tasks.Tasks)),
 	}
 	for _, task := range c.tasks.Tasks {
 		bindingState := "unbound"
@@ -572,6 +629,13 @@ func (c *Catalogue) ReleaseSummary() contracts.TaskSummaryResponse {
 		})
 	}
 	return result
+}
+
+func releaseManifestField(manifest *taskReleaseManifest, field func(*taskReleaseManifest) string) string {
+	if manifest == nil {
+		return ""
+	}
+	return field(manifest)
 }
 
 const (

@@ -149,6 +149,43 @@ func TestTaskFamilyProjectionHidesExecutionInternals(t *testing.T) {
 	}
 }
 
+func TestG8SummaryProjectsAllReleasePins(t *testing.T) {
+	t.Setenv("RUNTIME_TASKS_ROOT", filepath.Join("..", "..", "tasks"))
+	t.Setenv("RUNTIME_RELEASE_MANIFEST", filepath.Join("..", "..", "releases", "task-release-2026-08-25-qb-d00a1493-g8.json"))
+	t.Setenv("RUNTIME_TASK_FAMILY_MANIFEST", filepath.Join("..", "..", "task-families", "manifest.json"))
+	catalogue, err := engine.NewCatalogue()
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder := httptest.NewRecorder()
+	NewServer(catalogue).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/tasks/summary", nil))
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("summary status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+	var summary contracts.TaskSummaryResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &summary); err != nil {
+		t.Fatal(err)
+	}
+	if summary.ContractVersion != contracts.TaskSummaryContractVersion ||
+		summary.BindingState != "manifest-loaded" || !summary.Runnable ||
+		summary.RuntimeReleaseID != "runtime-task-release-2026-08-25-qb-d00a1493-g8" ||
+		summary.QuestionReleaseID != "question-release-d00a14931e607336" ||
+		summary.QuestionSourceSnapshotID != "question-release-d00a14931e607336" ||
+		summary.CapabilityBindingReleaseID != "question-capability-release-3c38b4c8c0fa7f47" ||
+		summary.CapabilityRegistryReleaseID != "capability-registry-2026-08-25-v3" ||
+		summary.TaskFamilyReleaseID != "task-family-release-2026-08-25" {
+		t.Fatalf("G8 summary pins were not projected: %#v", summary)
+	}
+	for _, task := range summary.Tasks {
+		if task.TaskFamilyKey == "" {
+			t.Fatalf("task %s has no TaskFamily key", task.TaskID)
+		}
+		if task.Status == "released" && len(task.QuestionBindings) == 0 && len(task.CapabilityKeys) == 0 {
+			t.Fatalf("released task %s has no question or capability join", task.TaskID)
+		}
+	}
+}
+
 func findFamily(families contracts.TaskFamilies, key string) (contracts.TaskFamily, bool) {
 	for _, family := range families.Families {
 		if family.Key == key {
