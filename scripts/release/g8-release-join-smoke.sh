@@ -7,7 +7,7 @@ workspace="${QUESTION_BRAIN_WORKSPACE:-fluent-interview}"
 tmp_manifest="$(mktemp -t fluent-task-runtime-g8.XXXXXX.json)"
 trap 'rm -f "$tmp_manifest"' EXIT
 
-source_manifest="${RUNTIME_RELEASE_SOURCE:-releases/task-release-2026-08-25-qb-d00a1493-g9.json}"
+source_manifest="${RUNTIME_RELEASE_SOURCE:-releases/task-release-2026-08-26-qb-d00a1493-g10.json}"
 test -s "${source_manifest}"
 expected_task_count="$(jq '.tasks | length' "${source_manifest}")"
 test "${expected_task_count}" -gt 0

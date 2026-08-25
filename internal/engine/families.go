@@ -37,6 +37,7 @@ type taskFamilyEntry struct {
 	Title          contracts.LocalizedContractText `json:"title"`
 	Brief          contracts.LocalizedContractText `json:"brief"`
 	CapabilityKeys []string                        `json:"capabilityKeys"`
+	ExecutionKind  string                          `json:"executionKind,omitempty"`
 	RubricRef      string                          `json:"rubricRef"`
 	Status         string                          `json:"status"`
 	Revisions      []taskFamilyRevisionEntry       `json:"revisions"`
@@ -111,6 +112,21 @@ func validateTaskFamilyManifest(manifest taskFamilyManifest) error {
 		if family.Status != "released" && family.Status != "unreleased" && family.Status != "draft" {
 			return fmt.Errorf("family %q has invalid status %q", family.Key, family.Status)
 		}
+		executionKind := strings.TrimSpace(family.ExecutionKind)
+		if executionKind == "" {
+			// Existing families are code exercises unless they explicitly opt in
+			// to the SQL discipline. The one pre-boundary family release remains
+			// readable as an immutable historical snapshot; it intentionally had
+			// a mixed rate-limiter family and must not be rewritten in place.
+			if manifest.ReleaseID == "task-family-release-2026-08-25" {
+				executionKind = "legacy"
+			} else {
+				executionKind = "code"
+			}
+		}
+		if executionKind != "code" && executionKind != "sql" && executionKind != "legacy" {
+			return fmt.Errorf("family %q has invalid executionKind %q", family.Key, family.ExecutionKind)
+		}
 		if len(family.CapabilityKeys) == 0 || len(family.Revisions) == 0 {
 			return fmt.Errorf("family %q requires capabilityKeys and revisions", family.Key)
 		}
@@ -132,6 +148,14 @@ func validateTaskFamilyManifest(manifest taskFamilyManifest) error {
 			}
 			if revision.Language == "" || revision.Profile == "" || !hashPattern.MatchString(revision.ImmutableHash) {
 				return fmt.Errorf("family %q revision %s@%d has incomplete language/profile/hash", family.Key, key.TaskID, key.Revision)
+			}
+			language := strings.ToLower(strings.TrimSpace(revision.Language))
+			profile := strings.ToLower(strings.TrimSpace(revision.Profile))
+			if executionKind == "sql" && (language != "sql" || profile != "postgres") {
+				return fmt.Errorf("family %q is sql but revision %s@%d uses %s/%s; SQL families must use sql/postgres", family.Key, key.TaskID, key.Revision, revision.Language, revision.Profile)
+			}
+			if executionKind == "code" && (language == "sql" || profile == "postgres") {
+				return fmt.Errorf("family %q is code but revision %s@%d uses %s/%s; SQL must be a separate SQL family", family.Key, key.TaskID, key.Revision, revision.Language, revision.Profile)
 			}
 			if revision.Availability != "runnable" && revision.Availability != "brief_only" && revision.Availability != "profile_unavailable" && revision.Availability != "superseded" && revision.Availability != "unreleased" {
 				return fmt.Errorf("family %q revision %s@%d has invalid availability %q", family.Key, key.TaskID, key.Revision, revision.Availability)

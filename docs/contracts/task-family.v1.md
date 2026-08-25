@@ -12,12 +12,19 @@ requires a new revision or a new release, never an in-place learner mutation.
 
 The current manifest is `task-families/manifest.json` and carries:
 
-- 15 families;
-- 18 revisions;
-- four language/profile revisions of one rate-limiter family (Go, Java,
-  Node.js, and PostgreSQL);
+- 16 families;
+- 20 revisions;
+- five code language/profile revisions of `task-family.rate-limiter` (Go,
+  Java, C#, TypeScript, and JavaScript);
+- one separate `task-family.postgresql-rate-limiting` SQL family for the
+  PostgreSQL implementation of the same capability;
 - explicit `runnable`, `brief_only`, `profile_unavailable`, `superseded`, and
   `unreleased` availability states.
+
+`executionKind` is the compatibility boundary. A `code` family may only
+contain application/runtime profiles; an `sql` family may only contain the
+`sql`/`postgres` profile. SQL is therefore a first-class PostgreSQL exercise,
+never a fake language revision of a Go/Java/Node/.NET implementation.
 
 The v2 runtime release joins each `(taskId, revision)` to exactly one family
 and to the Question Brain release. Historical v1 release files remain

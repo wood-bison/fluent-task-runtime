@@ -99,9 +99,11 @@ released TaskFamily API first, then uses authored descriptors only for the
 task source identity. A family-level capability snapshot is preferred over a
 descriptor breadcrumb. It copies no question prose and requires every
 question binding to resolve to a published production card. A capability can
-be shared by multiple language revisions (for example, the Node.js, Go, Java
-and PostgreSQL rate-limiter tasks) without pretending that their source code
-is interchangeable.
+be shared by multiple task families and language revisions (for example, the
+Node.js, Go, Java and PostgreSQL rate-limiter tasks) without pretending that
+their source code is interchangeable. PostgreSQL is exposed as the separate
+`task-family.postgresql-rate-limiting` SQL family, not as a language revision
+of `task-family.rate-limiter`.
 
 The runtime does not fetch Question Brain during a task run. Lab may fetch the
 referenced card for display, but it must verify the returned revision and hash

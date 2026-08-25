@@ -26,7 +26,7 @@ published Event Loop bridge:
   descriptor is `declared` until its own harness proof lands;
 - every released task carries the exact Question Brain release ID. The
   active immutable revision identity is supplied by
-  [`releases/task-release-2026-08-25-qb-d00a1493-g9.json`](releases/task-release-2026-08-25-qb-d00a1493-g9.json):
+  [`releases/task-release-2026-08-26-qb-d00a1493-g10.json`](releases/task-release-2026-08-26-qb-d00a1493-g10.json):
   each entry pins `stableKey`, Question Brain `revisionId`, and
   `contentHash`, names its `taskFamilyKey`, and exposes explicit
   `capabilityKeys` for the executable station crosswalk. The removed
@@ -102,7 +102,7 @@ question creates a new Question Brain release and a new runtime release
 manifest; it must not silently change the evidence context of an old run. Set
 `RUNTIME_RELEASE_MANIFEST` to test a candidate manifest before publishing it.
 The local Compose stack selects
-`/opt/releases/task-release-2026-08-25-qb-d00a1493-g8.json`, whose
+`/opt/releases/task-release-2026-08-26-qb-d00a1493-g10.json`, whose
 `questionReleaseId`, capability registry/binding IDs, and TaskFamily release
 match the current Question Brain and Task Runtime deployments. There is no
 implicit legacy fallback: without an explicit v3 manifest the runtime reports

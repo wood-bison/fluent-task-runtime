@@ -220,7 +220,27 @@ func historicalTaskFamilyManifest(t *testing.T) string {
 	if err := json.Unmarshal(body, &manifest); err != nil {
 		t.Fatal(err)
 	}
+	// Reconstruct the immutable pre-g10 family projection used by the
+	// historical g3/g8 release fixtures. Before the semantic SQL boundary was
+	// introduced, PostgreSQL was part of the rate-limiter family and the family
+	// release had the old identity.
+	manifest.ReleaseID = "task-family-release-2026-08-25"
+	var rateFamily map[string]interface{}
 	for _, family := range manifest.Families {
+		if key, _ := family["key"].(string); key == "task-family.rate-limiter" {
+			rateFamily = family
+			delete(family, "executionKind")
+		}
+	}
+	for _, family := range manifest.Families {
+		if key, _ := family["key"].(string); key == "task-family.postgresql-rate-limiting" {
+			if rateFamily != nil {
+				rateRevisions, _ := rateFamily["revisions"].([]interface{})
+				sqlRevisions, _ := family["revisions"].([]interface{})
+				rateFamily["revisions"] = append(rateRevisions, sqlRevisions...)
+			}
+			continue
+		}
 		revisions, ok := family["revisions"].([]interface{})
 		if !ok {
 			continue
@@ -238,6 +258,13 @@ func historicalTaskFamilyManifest(t *testing.T) string {
 		}
 		family["revisions"] = filtered
 	}
+	legacyFamilies := manifest.Families[:0]
+	for _, family := range manifest.Families {
+		if key, _ := family["key"].(string); key != "task-family.postgresql-rate-limiting" {
+			legacyFamilies = append(legacyFamilies, family)
+		}
+	}
+	manifest.Families = legacyFamilies
 	filteredBody, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
 		t.Fatal(err)

@@ -1,6 +1,6 @@
 {
   "contractVersion": "fluent-task-runtime.task-families.v1",
-  "releaseId": "task-family-release-2026-08-25",
+  "releaseId": "task-family-release-2026-08-26-g10",
   "families": [
     {
       "key": "task-family.deferred",
@@ -93,6 +93,7 @@
       "capabilityKeys": [
         "capability.distributed-systems.rate-limiter"
       ],
+      "executionKind": "code",
       "rubricRef": "rubric.rate-limiter.v1",
       "status": "released",
       "revisions": [
@@ -135,14 +136,6 @@
           "profile": "node",
           "availability": "runnable",
           "immutableHash": "aa81299b53bf34ea3b71094ea0a93e0eb39a88c1d42593650a6524323d574182"
-        },
-        {
-          "taskId": "pg-rate-limiter-001",
-          "revision": 1,
-          "language": "sql",
-          "profile": "postgres",
-          "availability": "runnable",
-          "immutableHash": "956b09d1d740ea161a507e85c2fa78f237dd8aaccc02fa4648d76eefeb996689"
         }
       ]
     },
@@ -367,6 +360,7 @@
       "capabilityKeys": [
         "capability.postgresql.query-planning"
       ],
+      "executionKind": "sql",
       "rubricRef": "rubric.postgresql-query-planning.v1",
       "status": "released",
       "revisions": [
@@ -393,6 +387,7 @@
       "capabilityKeys": [
         "capability.postgresql.row-locks"
       ],
+      "executionKind": "sql",
       "rubricRef": "rubric.postgresql-row-locks.v1",
       "status": "released",
       "revisions": [
@@ -403,6 +398,33 @@
           "profile": "postgres",
           "availability": "runnable",
           "immutableHash": "73403f634c799cb78308c53f33908cd0aad0c861dcff8ac60bd31177ea55bd8c"
+        }
+      ]
+    },
+    {
+      "key": "task-family.postgresql-rate-limiting",
+      "title": {
+        "en": "PostgreSQL rate limiting",
+        "ru": "Ограничение частоты в PostgreSQL"
+      },
+      "brief": {
+        "en": "Build a database-backed sliding-window limiter with an atomic decision, expiry, and client isolation.",
+        "ru": "Создайте ограничитель на базе PostgreSQL со скользящим окном, атомарным решением, истечением окна и изоляцией клиентов."
+      },
+      "capabilityKeys": [
+        "capability.distributed-systems.rate-limiter"
+      ],
+      "executionKind": "sql",
+      "rubricRef": "rubric.postgresql-rate-limiting.v1",
+      "status": "released",
+      "revisions": [
+        {
+          "taskId": "pg-rate-limiter-001",
+          "revision": 1,
+          "language": "sql",
+          "profile": "postgres",
+          "availability": "runnable",
+          "immutableHash": "956b09d1d740ea161a507e85c2fa78f237dd8aaccc02fa4648d76eefeb996689"
         }
       ]
     },

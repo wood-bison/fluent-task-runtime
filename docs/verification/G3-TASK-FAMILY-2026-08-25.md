@@ -7,10 +7,12 @@ Gate: G3 — TaskFamily, immutable TaskRevision metadata, and runtime projection
 ## Decision
 
 Task Runtime now has a separate language-neutral family manifest. It contains
-15 families and all 18 current revision directories. The four rate-limiter
-implementations are four revisions of one `task-family.rate-limiter`; they
-share one capability and preparation context while keeping independent
-language/profile execution. `project-book-boundary-001@1` is retained in the
+16 families and all 20 current revision directories. The five code
+rate-limiter implementations are revisions of one `task-family.rate-limiter`;
+the PostgreSQL implementation is a separate SQL family so it cannot be
+presented as a source-language variant of the code task. Both families keep
+the shared capability relation and independent language/profile execution.
+`project-book-boundary-001@1` is retained in the
 manifest as `unreleased`, so it cannot be mistaken for an executable learner
 task until its brief/workspace gate is complete.
 
@@ -21,10 +23,12 @@ rubric references, availability, and immutable directory hashes.
 
 ## Release and API
 
-New immutable release:
+Historical release:
 `releases/task-release-2026-08-25-qb-d550846f-g3.json`
+Current immutable release:
+`releases/task-release-2026-08-26-qb-d00a1493-g10.json`
 Family release:
-`task-families/manifest.json` (`task-family-release-2026-08-25`)
+`task-families/manifest.json` (`task-family-release-2026-08-26-g10`)
 Question Brain release:
 `question-release-d550846f4743c4d3`
 
@@ -34,7 +38,7 @@ and canonical capability keys for the 11 renamed stations.
 
 New safe projections:
 
-- `GET /v1/task-families` returns all 15 families and revision availability.
+- `GET /v1/task-families` returns all 16 families and revision availability.
 - `GET /v1/task-families/{familyKey}` returns one family.
 - Neither endpoint exposes source, starter files, solutions, hidden tests,
   image names, commands, or sandbox policy.
@@ -49,6 +53,8 @@ New safe projections:
   differs from `task.json` fails catalogue startup.
 - A v2 runtime release without `taskFamilyReleaseId` or without a matching
   family manifest fails startup.
+- A `code` family cannot contain `sql/postgres`; SQL revisions must live in an
+  explicit SQL family, and an SQL family cannot contain an application profile.
 - A task workspace/run for an `unreleased` revision returns `runtime_not_ready`;
   no fallback workspace or fake pass is synthesized.
 
