@@ -2,7 +2,7 @@
 
 Date: 2026-08-25  
 Status: **complete**  
-Scope: TypeScript and C#/.NET executable revisions plus Go editor coverage
+Scope: all six executable rate-limiter revisions plus Lab editor coverage
 
 ## What changed
 
@@ -43,13 +43,17 @@ curl -fsS http://127.0.0.1:48227/v1/task-families \
   | jq '.families[] | select(.key == "task-family.rate-limiter") | .revisions'
 ```
 
-The new revisions were executed through `POST /v1/runs` using the real Docker
-sandbox and all four checks passed:
+All six revisions were executed through `POST /v1/runs` using the real Docker
+sandbox. Each returned HTTP 200 and all four checks passed:
 
 ```json
 [
+  {"taskId":"go-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]},
   {"taskId":"ts-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]},
-  {"taskId":"csharp-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]}
+  {"taskId":"csharp-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]},
+  {"taskId":"java-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]},
+  {"taskId":"node-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]},
+  {"taskId":"pg-rate-limiter-001","http":200,"status":"pass","tests":["pass","pass","pass","pass"]}
 ]
 ```
 
@@ -59,4 +63,5 @@ The shared CodeMirror language registry now maps `.go` files to the official
 `@codemirror/lang-go` grammar. Before this fix `main.go` fell through to
 `plain`, so the screenshot showed no token colours even though the editor
 theme was loaded. The mapping is covered by the Lab language unit test and the
-same editor continues to serve TypeScript, Java, C#, SQL and JSON grammars.
+same editor continues to serve TypeScript, Java, C#, SQL, JavaScript and JSON
+grammars.
