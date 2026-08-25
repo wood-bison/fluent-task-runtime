@@ -39,10 +39,11 @@ published Event Loop bridge:
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
   versioned result envelope;
-- Jaeger is available in the local Compose profile on a unique port; readiness
+- The workspace uses the shared Question Brain Jaeger for traces; readiness
   reports the Docker sandbox probe separately from the catalogue and the HTTP
   control plane emits OTLP spans for every request plus a child span for each
-  task run.
+  task run. Standalone Compose can point `RT_OTLP_ENDPOINT` at any OTLP/gRPC
+  receiver.
 - The image build is architecture-portable: Compose supplies BuildKit's
   `TARGETARCH` and the binary listens on `RUNTIME_PORT` (default `48227`).
 - `node-event-loop-001@1` is the canonical Lab bridge: it accepts one
@@ -133,7 +134,10 @@ go run ./cmd/runtime
 curl http://127.0.0.1:48227/v1/health/ready
 ```
 
-Compose adds Jaeger at <http://127.0.0.1:56687>:
+The workspace Compose stack sends traces to the shared Question Brain Jaeger
+(`http://127.0.0.1:56686`, OTLP/gRPC `127.0.0.1:54317`). The runtime Compose
+file does not start a second Jaeger. Start the complete workspace from the
+parent directory with `pnpm dev` or `pnpm dev:production`.
 
 ```sh
 docker build -t fluent-runtime-task-node:1 task-images/node
@@ -147,15 +151,14 @@ docker compose -f deploy/compose/compose.yaml up -d
 The `fluent-runtime-task-*` image namespace is dedicated to this runtime, so
 rebuilding the Lab cannot silently replace a task sandbox image.
 
-The Compose profile sends OTLP/gRPC to Jaeger's `4317` receiver. Verify that
-the service is receiving traces after a smoke run:
+Verify that the shared service is receiving traces after a smoke run:
 
 ```sh
-curl http://127.0.0.1:56687/api/services
+curl http://127.0.0.1:56686/api/services
 ```
 
 When running the binary directly, set `OTEL_EXPORTER_OTLP_ENDPOINT` to an
-OTLP/gRPC endpoint (for example `127.0.0.1:14317`). Omitting it intentionally
+OTLP/gRPC endpoint (for example `127.0.0.1:54317`). Omitting it intentionally
 uses OpenTelemetry's no-op provider, which keeps local unit tests isolated.
 
 The local Compose execution profile mounts the Docker socket only to launch

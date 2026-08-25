@@ -42,7 +42,7 @@ contracts/                    versioned public runtime/result contracts
 tasks/<id>/                   task descriptors and learner-facing briefs
 task-images/<profile>/        pinned OCI sandbox image definitions
 profiles/                     profile metadata and compatibility notes
-deploy/compose/               local runtime + Jaeger stack
+deploy/compose/               local runtime wired to the workspace Jaeger
 docs/verification/            release-smoke and hardening evidence
 ```
 
@@ -69,10 +69,12 @@ go test ./...
 go run ./cmd/runtime
 curl http://127.0.0.1:48227/v1/health/ready
 docker compose -f deploy/compose/compose.yaml up -d
-curl http://127.0.0.1:56687/api/services
+curl http://127.0.0.1:56686/api/services
 ```
 
-Compose reserves the runtime API and Jaeger ports documented in `README.md`.
+The workspace reserves the runtime API and shared Jaeger ports documented in
+the parent `README.md`. Standalone runs must provide `RT_OTLP_ENDPOINT` when a
+local Jaeger/Collector is available.
 Use one Compose project name and the same absolute work-root path for nested
 Docker mounts. Keep resource limits and health checks enabled in every profile.
 
