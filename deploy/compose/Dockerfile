@@ -13,6 +13,8 @@ RUN test -n "$TARGETARCH" || (echo 'TARGETARCH is required for a reproducible im
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -ldflags='-s -w' -o /out/runtime ./cmd/runtime
 
 FROM docker:27-cli
+ARG SOURCE_REVISION=unknown
+LABEL org.opencontainers.image.revision="$SOURCE_REVISION"
 COPY --from=build /out/runtime /runtime
 COPY --from=build /src/tasks /opt/tasks
 COPY --from=build /src/task-families /opt/task-families
