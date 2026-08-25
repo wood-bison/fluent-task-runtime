@@ -6,8 +6,6 @@
   "summary": "Run the published event-loop challenge in a controlled Node process and retain its measured trace.",
   "breadcrumb": ["Node.js runtime", "Event loop ordering"],
   "concepts": ["Call stack", "process.nextTick", "Promise microtasks", "libuv timers"],
-  "questionKeys": ["question.c009"],
-  "questionReleaseId": "question-release-15e032d7b732f8c1",
   "runtime": "Node.js 24",
   "language": "javascript",
   "profile": "node",

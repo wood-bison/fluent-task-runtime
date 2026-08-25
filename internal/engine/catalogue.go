@@ -103,7 +103,6 @@ type taskDescriptor struct {
 	User              string                      `json:"user"`
 	Artifacts         []string                    `json:"artifacts"`
 	QuestionBindings  []contracts.QuestionBinding `json:"questionBindings"`
-	QuestionKeys      []string                    `json:"questionKeys"`
 	QuestionReleaseID string                      `json:"questionReleaseId"`
 	CapabilityKeys    []string                    `json:"capabilityKeys"`
 }
@@ -175,6 +174,13 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 		if descriptor.Revision < 1 {
 			return nil, fmt.Errorf("task descriptor %q has invalid revision %d", path, descriptor.Revision)
 		}
+		var rawDescriptor map[string]json.RawMessage
+		if err := json.Unmarshal(body, &rawDescriptor); err != nil {
+			return nil, fmt.Errorf("decode task descriptor %q: %w", path, err)
+		}
+		if _, legacy := rawDescriptor["questionKeys"]; legacy {
+			return nil, fmt.Errorf("task descriptor %q uses removed questionKeys; publish questionBindings/capabilityKeys in the release manifest", path)
+		}
 		if descriptor.TimeoutMS <= 0 || descriptor.MemoryMB <= 0 || descriptor.CPUs <= 0 {
 			return nil, fmt.Errorf("task descriptor %q must declare positive timeout, memory, and cpu limits", path)
 		}
@@ -185,7 +191,6 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 		}
 		questionReleaseID := descriptor.QuestionReleaseID
 		questionBindings := append([]contracts.QuestionBinding(nil), descriptor.QuestionBindings...)
-		questionKeys := append([]string(nil), descriptor.QuestionKeys...)
 		capabilityKeys := append([]string(nil), descriptor.CapabilityKeys...)
 		taskFamilyKey := ""
 		availability := "unreleased"
@@ -200,16 +205,22 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 				taskFamilyKey = entry.TaskFamilyKey
 				availability = "runnable"
 				var mergeErr error
-				questionReleaseID, questionBindings, questionKeys, capabilityKeys, mergeErr = mergeReleaseEntry(
-					questionReleaseID, questionBindings, questionKeys, capabilityKeys, releaseManifest.QuestionReleaseID, entry,
+				questionReleaseID, questionBindings, capabilityKeys, mergeErr = mergeReleaseEntry(
+					questionReleaseID, questionBindings, capabilityKeys, releaseManifest.QuestionReleaseID, entry,
 				)
 				if mergeErr != nil {
 					return nil, fmt.Errorf("task descriptor %q: %w", path, mergeErr)
 				}
 			}
 		}
-		questionBindings, questionKeys, capabilityKeys, bindingErr := validateQuestionBinding(
-			questionBindings, questionKeys, capabilityKeys, questionReleaseID, status,
+		validationStatus := status
+		if releaseManifest == nil && status == "released" {
+			// Descriptor-only reads are retained for migration diagnostics, but
+			// they are not executable and therefore do not require a release pin.
+			validationStatus = "declared"
+		}
+		questionBindings, capabilityKeys, bindingErr := validateQuestionBinding(
+			questionBindings, capabilityKeys, questionReleaseID, validationStatus,
 		)
 		if bindingErr != nil {
 			return nil, fmt.Errorf("task descriptor %q: %w", path, bindingErr)
@@ -223,7 +234,6 @@ func loadTasks(root string, releaseManifest *taskReleaseManifest) ([]contracts.T
 			TimeoutMS:     descriptor.TimeoutMS, MemoryMB: descriptor.MemoryMB, CPUs: descriptor.CPUs, User: descriptor.User,
 			Artifacts:         append([]string(nil), descriptor.Artifacts...),
 			QuestionBindings:  questionBindings,
-			QuestionKeys:      questionKeys,
 			QuestionReleaseID: questionReleaseID,
 			CapabilityKeys:    capabilityKeys,
 		})
@@ -327,7 +337,7 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 			}
 			entry.CapabilityKeys = validated
 		}
-		if _, _, _, err := validateQuestionBinding(entry.QuestionBindings, nil, entry.CapabilityKeys, manifest.QuestionReleaseID, "released"); err != nil {
+		if _, _, err := validateQuestionBinding(entry.QuestionBindings, entry.CapabilityKeys, manifest.QuestionReleaseID, "released"); err != nil {
 			return nil, fmt.Errorf("release manifest %q entry %s@%d: %w", path, entry.TaskID, entry.Revision, err)
 		}
 		manifest.entries[key] = entry
@@ -338,44 +348,37 @@ func loadReleaseManifest() (*taskReleaseManifest, error) {
 func mergeReleaseEntry(
 	questionReleaseID string,
 	questionBindings []contracts.QuestionBinding,
-	questionKeys, capabilityKeys []string,
+	capabilityKeys []string,
 	manifestQuestionReleaseID string,
 	entry taskReleaseEntry,
-) (string, []contracts.QuestionBinding, []string, []string, error) {
+) (string, []contracts.QuestionBinding, []string, error) {
 	// A release manifest is the immutable source of truth for the active
 	// release. Legacy descriptors retain the release that produced them, so
-	// their old questionReleaseId/questionKeys must not prevent generating a
-	// new overlay. A descriptor that already carries full immutable bindings is
+	// their old questionReleaseId must not prevent generating a new overlay. A
+	// descriptor that already carries full immutable bindings is
 	// different: it is an integrity assertion and must agree with the manifest.
 	descriptorHasBindings := len(questionBindings) > 0
 	if descriptorHasBindings && !sameQuestionBindings(questionBindings, entry.QuestionBindings) {
-		return "", nil, nil, nil, errors.New("task descriptor questionBindings disagree with immutable release manifest")
+		return "", nil, nil, errors.New("task descriptor questionBindings disagree with immutable release manifest")
 	}
 	if !descriptorHasBindings {
 		questionBindings = append([]contracts.QuestionBinding(nil), entry.QuestionBindings...)
 	}
 	if descriptorHasBindings && questionReleaseID != "" && questionReleaseID != manifestQuestionReleaseID {
-		return "", nil, nil, nil, fmt.Errorf("task descriptor pins question release %q but immutable bindings belong to %q", questionReleaseID, manifestQuestionReleaseID)
+		return "", nil, nil, fmt.Errorf("task descriptor pins question release %q but immutable bindings belong to %q", questionReleaseID, manifestQuestionReleaseID)
 	}
 	questionReleaseID = manifestQuestionReleaseID
 	capabilityKeys = append([]string(nil), entry.CapabilityKeys...)
-	questionKeys = manifestCompatibilityKeys(entry)
-	return questionReleaseID, questionBindings, questionKeys, capabilityKeys, nil
-}
-
-func manifestCompatibilityKeys(entry taskReleaseEntry) []string {
-	keys := questionKeysFromBindings(entry.QuestionBindings)
-	keys = append(keys, entry.CapabilityKeys...)
-	return keys
+	return questionReleaseID, questionBindings, capabilityKeys, nil
 }
 
 func validateQuestionBinding(
 	bindings []contracts.QuestionBinding,
-	legacyKeys, capabilityKeys []string,
+	capabilityKeys []string,
 	releaseID, status string,
-) ([]contracts.QuestionBinding, []string, []string, error) {
+) ([]contracts.QuestionBinding, []string, error) {
 	if status == "released" && !isQuestionReleaseID(releaseID) {
-		return nil, nil, nil, fmt.Errorf("released task must declare a pinned questionReleaseId")
+		return nil, nil, fmt.Errorf("released task must declare a pinned questionReleaseId")
 	}
 	validatedBindings := make([]contracts.QuestionBinding, 0, len(bindings))
 	seenStableKeys := make(map[string]struct{}, len(bindings))
@@ -385,55 +388,32 @@ func validateQuestionBinding(
 		binding.RevisionID = strings.TrimSpace(binding.RevisionID)
 		binding.ContentHash = strings.TrimSpace(binding.ContentHash)
 		if !isStableQuestionKey(binding.StableKey) {
-			return nil, nil, nil, fmt.Errorf("invalid question binding stableKey %q; expected question.<key>", binding.StableKey)
+			return nil, nil, fmt.Errorf("invalid question binding stableKey %q; expected question.<key>", binding.StableKey)
 		}
 		if !isRevisionID(binding.RevisionID) {
-			return nil, nil, nil, fmt.Errorf("invalid question binding revisionId for %q", binding.StableKey)
+			return nil, nil, fmt.Errorf("invalid question binding revisionId for %q", binding.StableKey)
 		}
 		if !isContentHash(binding.ContentHash) {
-			return nil, nil, nil, fmt.Errorf("invalid question binding contentHash for %q", binding.StableKey)
+			return nil, nil, fmt.Errorf("invalid question binding contentHash for %q", binding.StableKey)
 		}
 		if _, exists := seenStableKeys[binding.StableKey]; exists {
-			return nil, nil, nil, fmt.Errorf("duplicate question binding stableKey %q", binding.StableKey)
+			return nil, nil, fmt.Errorf("duplicate question binding stableKey %q", binding.StableKey)
 		}
 		if _, exists := seenRevisionIDs[binding.RevisionID]; exists {
-			return nil, nil, nil, fmt.Errorf("duplicate question binding revisionId %q", binding.RevisionID)
+			return nil, nil, fmt.Errorf("duplicate question binding revisionId %q", binding.RevisionID)
 		}
 		seenStableKeys[binding.StableKey] = struct{}{}
 		seenRevisionIDs[binding.RevisionID] = struct{}{}
 		validatedBindings = append(validatedBindings, binding)
 	}
-	validatedKeys := make([]string, 0, len(legacyKeys)+len(validatedBindings))
-	seenLegacyKeys := make(map[string]struct{}, len(legacyKeys)+len(validatedBindings))
-	for _, key := range legacyKeys {
-		key = strings.TrimSpace(key)
-		if !isStableBindingKey(key) {
-			return nil, nil, nil, fmt.Errorf("invalid legacy question binding %q; expected question.<key> or capability.<key>", key)
-		}
-		if _, exists := seenLegacyKeys[key]; exists {
-			return nil, nil, nil, fmt.Errorf("duplicate legacy question binding %q", key)
-		}
-		if strings.HasPrefix(key, "question.") || strings.HasPrefix(key, "capability.") {
-			seenLegacyKeys[key] = struct{}{}
-		}
-		validatedKeys = append(validatedKeys, key)
-	}
-	if len(validatedKeys) == 0 && len(validatedBindings) > 0 {
-		validatedKeys = questionKeysFromBindings(validatedBindings)
-	}
 	validatedCapabilities, err := validateCapabilityKeys(capabilityKeys)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
-	for _, key := range validatedKeys {
-		if strings.HasPrefix(key, "capability.") && !containsString(validatedCapabilities, key) {
-			validatedCapabilities = append(validatedCapabilities, key)
-		}
+	if status == "released" && len(validatedBindings) == 0 && len(validatedCapabilities) == 0 {
+		return nil, nil, fmt.Errorf("released task must declare at least one question binding or capability key")
 	}
-	if status == "released" && len(validatedKeys) == 0 && len(validatedBindings) == 0 && len(validatedCapabilities) == 0 {
-		return nil, nil, nil, fmt.Errorf("released task must declare at least one question binding or capability key")
-	}
-	return validatedBindings, validatedKeys, validatedCapabilities, nil
+	return validatedBindings, validatedCapabilities, nil
 }
 
 var (
@@ -485,14 +465,6 @@ func validateCapabilityKeys(keys []string) ([]string, error) {
 		result = append(result, key)
 	}
 	return result, nil
-}
-
-func questionKeysFromBindings(bindings []contracts.QuestionBinding) []string {
-	result := make([]string, 0, len(bindings))
-	for _, binding := range bindings {
-		result = append(result, binding.StableKey)
-	}
-	return result
 }
 
 func sameQuestionBindings(left, right []contracts.QuestionBinding) bool {
@@ -610,8 +582,6 @@ func (c *Catalogue) ReleaseSummary() contracts.TaskSummaryResponse {
 			bindingState = "full"
 		} else if len(task.CapabilityKeys) > 0 {
 			bindingState = "capability-only"
-		} else if len(task.QuestionKeys) > 0 {
-			bindingState = "legacy"
 		}
 		result.Tasks = append(result.Tasks, contracts.TaskSummary{
 			TaskID:            task.ID,
@@ -725,7 +695,6 @@ func cloneTask(task contracts.Task) contracts.Task {
 	task.DeclaredTests = cloneStrings(task.DeclaredTests)
 	task.Artifacts = cloneStrings(task.Artifacts)
 	task.QuestionBindings = cloneQuestionBindings(task.QuestionBindings)
-	task.QuestionKeys = cloneStrings(task.QuestionKeys)
 	task.CapabilityKeys = cloneStrings(task.CapabilityKeys)
 	return task
 }

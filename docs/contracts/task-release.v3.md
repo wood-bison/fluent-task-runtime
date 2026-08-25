@@ -41,9 +41,9 @@ Each question-backed revision has only the following authoritative join:
 `questionBindings` are immutable revision-plus-hash identities. A capability is
 not a question and is never encoded into `questionBindings`. A capability-only
 capstone has an empty binding array and explicit `capabilityKeys`, for example
-`project-book-boundary-001@1`. The deprecated `questionKeys` projection may be
-returned by the legacy `/v1/tasks` endpoint for old consumers, but it is not
-read by the v3 generator or by the Lab relation join.
+`project-book-boundary-001@1`. The removed `questionKeys` projection is not
+returned by `/v1/tasks`, is not read by the v3 generator, and is rejected by
+the Lab relation join.
 
 ## Fail-closed rules
 

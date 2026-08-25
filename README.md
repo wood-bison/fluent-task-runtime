@@ -29,11 +29,12 @@ published Event Loop bridge:
   [`releases/task-release-2026-08-25-qb-d00a1493-g8.json`](releases/task-release-2026-08-25-qb-d00a1493-g8.json):
   each entry pins `stableKey`, Question Brain `revisionId`, and
   `contentHash`, names its `taskFamilyKey`, and exposes explicit
-  `capabilityKeys` for the executable station crosswalk. The older
-  `questionKeys` property remains a read-only projection for historical Lab
-  clients; the v3 generator and Lab adapter never use it as an authoritative
-  join. The runtime rejects malformed or conflicting bindings at catalogue
-  load, while Lab exposes a server-side relation audit at
+  `capabilityKeys` for the executable station crosswalk. The removed
+  `questionKeys` compatibility projection is not emitted or accepted by the
+  current runtime contract; the loader rejects it with a migration error.
+  The v3 generator and Lab adapter use only the typed binding fields. The
+  runtime rejects malformed or conflicting bindings at catalogue load, while
+  Lab exposes a server-side relation audit at
   `/api/runtime/relations`;
 - `/v1/runs` executes a released revision through Docker with no network,
   bounded CPU/memory/PIDs, read-only solution and hidden-test mounts, and a
@@ -89,11 +90,11 @@ only when the runtime loads the immutable catalogue.
 }
 ```
 
-For historical compatibility, `questionKeys` is the ordered union of the binding
-`stableKey` values and the `capabilityKeys` values. Therefore a live task may
-contain both `question.q315` and a hierarchical key such as
-`capability.distributed-systems.rate-limiter`; clients must use
-`questionBindings` and `capabilityKeys` for authoritative joins.
+There is no overloaded key projection. A question-backed revision joins through
+`questionBindings`; a capability-only revision joins through `capabilityKeys`.
+This keeps question identity and capability taxonomy separate and makes an
+accidental legacy payload fail at the boundary instead of being silently
+reinterpreted.
 
 The release ID is a content-release pin, not a live lookup. Updating a
 question creates a new Question Brain release and a new runtime release

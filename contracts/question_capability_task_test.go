@@ -38,12 +38,6 @@ func TestQuestionCapabilityTaskContractRejectsTaskSequenceCapability(t *testing.
 	}
 }
 
-func TestQuestionCapabilityTaskContractRejectsQuestionCapabilityProjection(t *testing.T) {
-	if err := ValidateQuestionKeysProjection([]string{"question.rate-limiter", "capability.distributed-systems.rate-limiter"}, []string{"capability.distributed-systems.rate-limiter"}); err == nil {
-		t.Fatal("capability leaked into questionKeys")
-	}
-}
-
 func TestWorkspaceFixtureValidatesInRuntime(t *testing.T) {
 	_, sourceFile, _, ok := runtime.Caller(0)
 	if !ok {

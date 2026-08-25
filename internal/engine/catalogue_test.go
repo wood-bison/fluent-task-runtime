@@ -20,7 +20,7 @@ func TestCatalogueHonoursTaskReleaseMetadata(t *testing.T) {
 		}
 		binding := ""
 		if status == "released" {
-			binding = `,"questionKeys":["question.q777"],"questionReleaseId":"question-release-15e032d7b732f8c1"`
+			binding = `,"questionBindings":[{"stableKey":"question.q777","revisionId":"11111111-1111-4111-8111-111111111111","contentHash":"` + strings.Repeat("a", 64) + `"}],"questionReleaseId":"question-release-15e032d7b732f8c1"`
 		}
 		body := `{"taskId":"` + id + `","revision":7,"status":"` + status + `","profile":"node","runtime":"Node.js 24","image":"fluent-runtime-task-node:1","checkCommand":["node"],"editableFiles":["main.js"],"timeoutMs":20000,"memoryMb":512,"cpus":1,"user":"` + user + `","declaredTests":["main task"]` + binding + `}`
 		if err := os.WriteFile(filepath.Join(directory, "task.json"), []byte(body), 0o644); err != nil {
@@ -36,7 +36,7 @@ func TestCatalogueHonoursTaskReleaseMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 	released, ok := catalogue.Task("released-task", 7)
-	if !ok || released.Status != "released" || released.User != "1000:1000" || released.QuestionReleaseID != "question-release-15e032d7b732f8c1" || len(released.QuestionKeys) != 1 || released.QuestionKeys[0] != "question.q777" {
+	if !ok || released.Status != "released" || released.User != "1000:1000" || released.QuestionReleaseID != "question-release-15e032d7b732f8c1" || len(released.QuestionBindings) != 1 || released.QuestionBindings[0].StableKey != "question.q777" {
 		t.Fatalf("released descriptor was not preserved: %#v (ok=%v)", released, ok)
 	}
 	declared, ok := catalogue.Task("declared-task", 7)
@@ -88,9 +88,6 @@ func TestCatalogueLoadsImmutableReleaseManifestOverlay(t *testing.T) {
 	if len(task.QuestionBindings) != 3 || task.QuestionBindings[0].StableKey != "question.q315" {
 		t.Fatalf("immutable question bindings were not projected: %#v", task.QuestionBindings)
 	}
-	if len(task.QuestionKeys) != 4 || task.QuestionKeys[3] != "capability.distributed-systems.rate-limiter" {
-		t.Fatalf("questionKeys compatibility projection must include hierarchical capability keys: %#v", task.QuestionKeys)
-	}
 	if task.QuestionBindings[0].RevisionID == "" || len(task.QuestionBindings[0].ContentHash) != 64 {
 		t.Fatalf("binding is missing revision identity or hash: %#v", task.QuestionBindings[0])
 	}
@@ -98,7 +95,7 @@ func TestCatalogueLoadsImmutableReleaseManifestOverlay(t *testing.T) {
 		t.Fatalf("capabilityKeys must be projected from the active I2 release: %#v", task.CapabilityKeys)
 	}
 	legacy, ok := catalogue.Task("project-book-boundary-001", 1)
-	if !ok || len(legacy.QuestionBindings) != 0 || len(legacy.CapabilityKeys) != 1 || legacy.CapabilityKeys[0] != "capability.tier1-capstone" || len(legacy.QuestionKeys) != 1 || legacy.QuestionKeys[0] != "capability.tier1-capstone" {
+	if !ok || len(legacy.QuestionBindings) != 0 || len(legacy.CapabilityKeys) != 1 || legacy.CapabilityKeys[0] != "capability.tier1-capstone" {
 		t.Fatalf("capability-only release was not projected: %#v (ok=%v)", legacy, ok)
 	}
 
@@ -180,7 +177,7 @@ func TestCatalogueOverlaysLegacyDescriptorReleaseMetadata(t *testing.T) {
 	if err := os.MkdirAll(taskRoot, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	legacyDescriptor := `{"taskId":"legacy-task","revision":7,"status":"released","profile":"node","runtime":"Node.js 24","image":"fluent-runtime-task-node:1","checkCommand":["node"],"editableFiles":["main.js"],"timeoutMs":20000,"memoryMb":512,"cpus":1,"questionKeys":["question.q777"],"questionReleaseId":"question-release-15e032d7b732f8c1"}`
+	legacyDescriptor := `{"taskId":"legacy-task","revision":7,"status":"released","profile":"node","runtime":"Node.js 24","image":"fluent-runtime-task-node:1","checkCommand":["node"],"editableFiles":["main.js"],"timeoutMs":20000,"memoryMb":512,"cpus":1}`
 	if err := os.WriteFile(filepath.Join(taskRoot, "task.json"), []byte(legacyDescriptor), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +193,7 @@ func TestCatalogueOverlaysLegacyDescriptorReleaseMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 	task, ok := catalogue.Task("legacy-task", 7)
-	if !ok || !task.Runnable || task.QuestionReleaseID != "question-release-aaaaaaaaaaaaaaaa" || len(task.QuestionBindings) != 1 || task.QuestionBindings[0].StableKey != "question.q999" || len(task.QuestionKeys) != 1 || task.QuestionKeys[0] != "question.q999" {
+	if !ok || !task.Runnable || task.QuestionReleaseID != "question-release-aaaaaaaaaaaaaaaa" || len(task.QuestionBindings) != 1 || task.QuestionBindings[0].StableKey != "question.q999" {
 		t.Fatalf("new release did not overlay historical descriptor metadata: %#v (ok=%v)", task, ok)
 	}
 }

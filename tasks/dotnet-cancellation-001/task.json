@@ -10,8 +10,6 @@
   "language": "csharp",
   "profile": "dotnet",
   "capabilityKeys": ["capability.runtime.dotnet-cancellation-001"],
-  "questionKeys": ["question.q937"],
-  "questionReleaseId": "question-release-15e032d7b732f8c1",
   "image": "fluent-runtime-task-dotnet:1",
   "checkCommand": ["bash", "/opt/harness/run.sh"],
   "editableFiles": ["cancellation.cs"],

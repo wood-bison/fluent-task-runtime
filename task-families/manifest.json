@@ -9,7 +9,7 @@
       "capabilityKeys": ["capability.runtime.deferred"],
       "rubricRef": "rubric.deferred.v1",
       "status": "released",
-      "revisions": [{ "taskId": "deferred", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "231827224de30d4dc0f83ad39e268fb20bbd236cce19f5d58cc7a58b687fd7dd" }]
+      "revisions": [{ "taskId": "deferred", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "582300b8480f203376fce1a029ebd232798e4a977b91fd8d325f2a9d49dd244b" }]
     },
     {
       "key": "task-family.dotnet-cancellation",
@@ -18,7 +18,7 @@
       "capabilityKeys": ["capability.dotnet.cancellation-boundary"],
       "rubricRef": "rubric.cancellation-boundary.v1",
       "status": "released",
-      "revisions": [{ "taskId": "dotnet-cancellation-001", "revision": 1, "language": "csharp", "profile": "dotnet", "availability": "runnable", "immutableHash": "c1a9d4d38492fbd4d0f557dd2f25f151fa253790e8a315c962cf8078e588e234" }]
+      "revisions": [{ "taskId": "dotnet-cancellation-001", "revision": 1, "language": "csharp", "profile": "dotnet", "availability": "runnable", "immutableHash": "0489d13effb01e3652c4f69d3458629ea3e2103695abca0403cdc772a706a74d" }]
     },
     {
       "key": "task-family.fluent-calculator",
@@ -27,7 +27,7 @@
       "capabilityKeys": ["capability.runtime.fluent-calculator"],
       "rubricRef": "rubric.fluent-api.v1",
       "status": "released",
-      "revisions": [{ "taskId": "fluent-calculator", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "a47affcdc514b2307678b756535ba830921f66608a44c33d15dd57c14876abcf" }]
+      "revisions": [{ "taskId": "fluent-calculator", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "1306adbfb1ebcd3ad2f4a0d0ea5137df9a4e95fe76977e86a2d83c3372517890" }]
     },
     {
       "key": "task-family.rate-limiter",
@@ -37,10 +37,10 @@
       "rubricRef": "rubric.rate-limiter.v1",
       "status": "released",
       "revisions": [
-        { "taskId": "go-rate-limiter-001", "revision": 1, "language": "go", "profile": "go", "availability": "runnable", "immutableHash": "6fe73f7647043b86971b7791a8b24efc45cc9a9bf247376b62802bf0886e08a6" },
-        { "taskId": "java-rate-limiter-001", "revision": 1, "language": "java", "profile": "java", "availability": "runnable", "immutableHash": "c2284e643b7b950e24628882897fe5448b1c810b1f571300cf2db89e74355a23" },
-        { "taskId": "node-rate-limiter-001", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "8fd03194764d9196e6d9f865f1cd89183ba86549c36efcf889bc8b3763929737" },
-        { "taskId": "pg-rate-limiter-001", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "03ace5fd617f82bc12699ff5ce78d30139e93be401f519aa2b0a59dd9959818b" }
+        { "taskId": "go-rate-limiter-001", "revision": 1, "language": "go", "profile": "go", "availability": "runnable", "immutableHash": "f24fd8ca0a2032a8acc2f8499444e63558c6bcdf3c06dd94105e2bbcbe91e9cb" },
+        { "taskId": "java-rate-limiter-001", "revision": 1, "language": "java", "profile": "java", "availability": "runnable", "immutableHash": "1577bd178bc179a2a9554d13e0fd10ee743b83b98d215c085a75c408d14b0322" },
+        { "taskId": "node-rate-limiter-001", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "aa81299b53bf34ea3b71094ea0a93e0eb39a88c1d42593650a6524323d574182" },
+        { "taskId": "pg-rate-limiter-001", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "956b09d1d740ea161a507e85c2fa78f237dd8aaccc02fa4648d76eefeb996689" }
       ]
     },
     {
@@ -50,7 +50,7 @@
       "capabilityKeys": ["capability.http-api.authentication-authorization"],
       "rubricRef": "rubric.authentication-authorization.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-auth-015", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "df1d06d91361b854ba1bf0becd3588b1ffd63ee0f1fcae2cee11f0c8403ebff7" }]
+      "revisions": [{ "taskId": "node-auth-015", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "5a9a903e551056bc6e5c822bc61b6310d8c0a747fce83d2d8cb3d341451fcd1d" }]
     },
     {
       "key": "task-family.cache-invalidation",
@@ -59,7 +59,7 @@
       "capabilityKeys": ["capability.delivery-observability.cache-invalidation"],
       "rubricRef": "rubric.cache-invalidation.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-cache-014", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "7f3bc81851e56fa84a9963b8abcdbd6e210028b05347fa15ca264e3eed2462da" }]
+      "revisions": [{ "taskId": "node-cache-014", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "d95695f6e19f324047339104950fc0c52a689f68ba727e0fd0b55c058ca7f1ea" }]
     },
     {
       "key": "task-family.bounded-concurrency",
@@ -68,7 +68,7 @@
       "capabilityKeys": ["capability.nodejs.bounded-concurrency"],
       "rubricRef": "rubric.bounded-concurrency.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-concurrency-012", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "6e63dd73a91dd92cfbb3942b37f516653a168ccfa54f23f5b8c53735479ba3f4" }]
+      "revisions": [{ "taskId": "node-concurrency-012", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "d7174d0aba92f086fa3cab00e91e2f85da3a9221bab5235fddff6df84f186111" }]
     },
     {
       "key": "task-family.cpu-bound-work",
@@ -77,7 +77,7 @@
       "capabilityKeys": ["capability.nodejs.cpu-bound-work"],
       "rubricRef": "rubric.cpu-bound-work.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-cpu-bound-002", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "5fcf92b6466482f37708230646735b976afe7e55b0777c2fa831e3e8c77a4a33" }]
+      "revisions": [{ "taskId": "node-cpu-bound-002", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "0351747a8d4e890dec54c47306d7290628fe4e3dcac8c9f0756a4cde27acf931" }]
     },
     {
       "key": "task-family.event-loop-ordering",
@@ -86,7 +86,7 @@
       "capabilityKeys": ["capability.nodejs.event-loop-ordering"],
       "rubricRef": "rubric.event-loop-ordering.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-event-loop-001", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "7152ee0bd5d52996bebe6f6a340c7491750be4b903e7c72bb6d4d0e52c9fa786" }]
+      "revisions": [{ "taskId": "node-event-loop-001", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "6a69027a0f7421a470c5dc78fdfdb2d868fd2a989b0917566b2a4682ee49ab11" }]
     },
     {
       "key": "task-family.idempotent-delivery",
@@ -95,7 +95,7 @@
       "capabilityKeys": ["capability.distributed-systems.idempotent-delivery"],
       "rubricRef": "rubric.idempotent-delivery.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-idempotency-013", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "04e4b5075e144aabf0d3f08a923a8a62a2fa8497179126d2ef8c65f9403c3e43" }]
+      "revisions": [{ "taskId": "node-idempotency-013", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "4fbfbdfb1dcb7a3fd59ab925876ac5426eb26c72fac793360b11507c3cefcde3" }]
     },
     {
       "key": "task-family.memory-retention",
@@ -104,7 +104,7 @@
       "capabilityKeys": ["capability.nodejs.memory-retention"],
       "rubricRef": "rubric.memory-retention.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-memory-004", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "dfd3920a3dd7ab0b989c4e3000a6644a2ba03a9f6193db45831712d23b4e041d" }]
+      "revisions": [{ "taskId": "node-memory-004", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "f53eaa4f5c04e82720804d811bb83311e873b8711e8a3a29e52721db6af66a24" }]
     },
     {
       "key": "task-family.streams-backpressure",
@@ -113,7 +113,7 @@
       "capabilityKeys": ["capability.nodejs.streams-backpressure"],
       "rubricRef": "rubric.streams-backpressure.v1",
       "status": "released",
-      "revisions": [{ "taskId": "node-streams-003", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "15013c6aa296696ed5797fa0a493997499ae07d19d7ac5ba3b79f21d00ef54d2" }]
+      "revisions": [{ "taskId": "node-streams-003", "revision": 1, "language": "javascript", "profile": "node", "availability": "runnable", "immutableHash": "73e52a3c69623211086d46a6e78e0113c3bfeb057018cc9f0280a2f2092fcd81" }]
     },
     {
       "key": "task-family.postgresql-query-planning",
@@ -122,7 +122,7 @@
       "capabilityKeys": ["capability.postgresql.query-planning"],
       "rubricRef": "rubric.postgresql-query-planning.v1",
       "status": "released",
-      "revisions": [{ "taskId": "pg-indexes-008", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "ca99bde93945884b504d7ffb9efd77d25271dc8a475a69ba1fdd7fa910c25ca4" }]
+      "revisions": [{ "taskId": "pg-indexes-008", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "98caf8ef3770308e98190c61ed21e9e95912b76c3dbc81e04c256ceee31dcf51" }]
     },
     {
       "key": "task-family.postgresql-row-locks",
@@ -131,7 +131,7 @@
       "capabilityKeys": ["capability.postgresql.row-locks"],
       "rubricRef": "rubric.postgresql-row-locks.v1",
       "status": "released",
-      "revisions": [{ "taskId": "pg-locks-016", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "a4d705fcaafd077b9ee587d3ba5f9af9b8e1dc5d3dd6b1b7ab48118c2345295e" }]
+      "revisions": [{ "taskId": "pg-locks-016", "revision": 1, "language": "sql", "profile": "postgres", "availability": "runnable", "immutableHash": "73403f634c799cb78308c53f33908cd0aad0c861dcff8ac60bd31177ea55bd8c" }]
     },
     {
       "key": "task-family.project-book-boundary",
@@ -140,7 +140,7 @@
       "capabilityKeys": ["capability.delivery-observability.execution-boundary"],
       "rubricRef": "rubric.project-book-boundary.v1",
       "status": "unreleased",
-      "revisions": [{ "taskId": "project-book-boundary-001", "revision": 1, "language": "typescript", "profile": "node", "availability": "unreleased", "immutableHash": "75150f23f289509203f2551ed67c31d80990a6bab9489874a1440ac0b77fa4bf" }]
+      "revisions": [{ "taskId": "project-book-boundary-001", "revision": 1, "language": "typescript", "profile": "node", "availability": "unreleased", "immutableHash": "2a0fa82445106fc80e2884aaad84f83b4d4a1d3b352c76f28e629b776622ff2b" }]
     }
   ]
 }

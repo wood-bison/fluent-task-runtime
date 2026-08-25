@@ -77,10 +77,6 @@ type Task struct {
 	QuestionReleaseID string            `json:"questionReleaseId,omitempty"`
 	QuestionBindings  []QuestionBinding `json:"questionBindings"`
 	CapabilityKeys    []string          `json:"capabilityKeys"`
-	// QuestionKeys is a deprecated compatibility projection for Lab clients
-	// that only understand the first binding contract. New integrations must
-	// use QuestionBindings so revision and content identity cannot be lost.
-	QuestionKeys []string `json:"questionKeys,omitempty"`
 }
 
 type Tasks struct {

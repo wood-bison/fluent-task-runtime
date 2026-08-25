@@ -30,20 +30,15 @@ database or copying question prose into the runtime repository.
       "contentHash": "4d3598baa00926e1a62e48ecc8544d5597f289be04331968b891b020eebf496d"
     }
   ],
-  "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
-  "questionKeys": [
-    "question.q315",
-    "capability.distributed-systems.rate-limiter"
-  ]
+  "capabilityKeys": ["capability.distributed-systems.rate-limiter"]
 }
 ```
 
-`questionBindings` is the authoritative join. `questionKeys` is a deprecated
-compatibility projection: it contains the `stableKey` of every
-`questionBindings` entry followed by every `capabilityKeys` entry, including
-hierarchical keys such as `capability.distributed-systems.rate-limiter`. It
-may be removed only after all Lab clients consume `questionBindings` and
-`capabilityKeys`.
+`questionBindings` is the authoritative join for question-backed revisions;
+`capabilityKeys` is the authoritative join for capability-only revisions.
+There is no current `questionKeys` projection. The Go loader and Lab parsers
+reject that removed field so a stale descriptor cannot silently become a
+different relation.
 
 ## Manifest and immutability
 
@@ -58,16 +53,14 @@ release and the exact identity of each referenced revision:
 - `capabilityKeys` are explicit cross-system capability references and are
   never inferred from `breadcrumb`, `concepts`, or a task title.
 
-The loader applies this manifest as an overlay only when
-`RUNTIME_RELEASE_MANIFEST` is explicitly set. Existing released `task.json`
-files remain unchanged, so a historical execution context cannot be silently
-rewritten. The active manifest is authoritative for the legacy
-`questionReleaseId`/`questionKeys` projection; those old descriptor values do
-not block generating a new overlay. If a descriptor already contains full
-immutable `questionBindings`, a disagreement is an integrity error and fails
-catalogue startup. A released task missing from an active manifest also fails
-startup. This makes a release incomplete rather than allowing a partially
-bound catalogue into the API.
+The loader applies this manifest only when `RUNTIME_RELEASE_MANIFEST` is
+explicitly set. Existing released `task.json` files remain immutable, and a
+descriptor with the removed `questionKeys` field fails catalogue startup with
+a migration error. If a descriptor already contains full immutable
+`questionBindings`, a disagreement is an integrity error and fails catalogue
+startup. A released task missing from an active manifest also fails startup.
+This makes a release incomplete rather than allowing a partially bound
+catalogue into the API.
 
 The historical candidate points at `question-release-15e032d7b732f8c1` and is
 kept immutable for audit purposes. The reconciled candidate
@@ -125,12 +118,10 @@ readiness probe is degraded, and both workspace and run requests return
 commands. If a released task has no authored `brief.md`, the endpoint returns
 `workspace_unavailable`; it does not invent a fallback brief.
 
-## Compatibility policy
+## Migration policy
 
-Old descriptors may still contain `questionKeys` and `questionReleaseId` while
-the migration is in progress. They are accepted only as a read-only
-compatibility input and are projected into the new response. Without an
-explicit manifest they cannot make a task runnable. New release
-manifests require full `questionBindings` for question-backed tasks and valid
-`capabilityKeys` for capability-only tasks. Legacy identifiers such as `Q123`,
-`C123`, or `CAP-01` are rejected.
+The migration is complete for the active release. New manifests require full
+`questionBindings` for question-backed tasks and valid `capabilityKeys` for
+capability-only tasks. The removed `questionKeys` field is retained only in
+immutable historical evidence and in a negative parser test that proves it is
+rejected. Legacy identifiers such as `Q123`, `C123`, or `CAP-01` are rejected.

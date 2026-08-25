@@ -188,20 +188,3 @@ func (c QuestionCapabilityTaskContract) Validate() error {
 	}
 	return nil
 }
-
-// ValidateQuestionKeysProjection keeps the deprecated response field honest.
-func ValidateQuestionKeysProjection(questionKeys, capabilityKeys []string) error {
-	capabilities := make(map[string]struct{}, len(capabilityKeys))
-	for _, key := range capabilityKeys {
-		capabilities[key] = struct{}{}
-	}
-	for _, key := range questionKeys {
-		if !contractQuestionKey.MatchString(key) {
-			return fmt.Errorf("questionKeys contains non-question key %q", key)
-		}
-		if _, exists := capabilities[key]; exists {
-			return fmt.Errorf("questionKeys contains capability key %q", key)
-		}
-	}
-	return nil
-}
