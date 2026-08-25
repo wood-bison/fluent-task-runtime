@@ -1,0 +1,25 @@
+{
+  "taskId": "ts-rate-limiter-001",
+  "revision": 1,
+  "status": "released",
+  "title": "Rate limiter in TypeScript",
+  "summary": "Implement a deterministic per-key token bucket with explicit TypeScript types and observable boundaries.",
+  "breadcrumb": ["Node.js + TypeScript", "Resilience and bounded work"],
+  "concepts": ["Token bucket", "Time-based refill", "Per-key state", "Type-safe contracts"],
+  "runtime": "Node.js 24 · TypeScript strip types",
+  "language": "typescript",
+  "profile": "node",
+  "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
+  "image": "fluent-runtime-task-node:1",
+  "checkCommand": ["node", "--experimental-strip-types", "/opt/harness/run.js"],
+  "editableFiles": ["rate-limiter.ts"],
+  "timeoutMs": 20000,
+  "memoryMb": 1024,
+  "cpus": 1,
+  "declaredTests": [
+    "allows requests inside the configured burst",
+    "refills tokens over elapsed time",
+    "isolates independent keys",
+    "rejects requests after the bucket is empty"
+  ]
+}

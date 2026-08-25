@@ -105,12 +105,28 @@
           "immutableHash": "f24fd8ca0a2032a8acc2f8499444e63558c6bcdf3c06dd94105e2bbcbe91e9cb"
         },
         {
+          "taskId": "csharp-rate-limiter-001",
+          "revision": 1,
+          "language": "csharp",
+          "profile": "dotnet",
+          "availability": "runnable",
+          "immutableHash": "2882b3fa15fcfcb95c9226285278ba345cf081cb8c8e12668f028182160a8205"
+        },
+        {
           "taskId": "java-rate-limiter-001",
           "revision": 1,
           "language": "java",
           "profile": "java",
           "availability": "runnable",
           "immutableHash": "1577bd178bc179a2a9554d13e0fd10ee743b83b98d215c085a75c408d14b0322"
+        },
+        {
+          "taskId": "ts-rate-limiter-001",
+          "revision": 1,
+          "language": "typescript",
+          "profile": "node",
+          "availability": "runnable",
+          "immutableHash": "35935c92c088b8a694e14f54d9a7379fcd083c07d65a17095e74fd8ee2c7e56a"
         },
         {
           "taskId": "node-rate-limiter-001",

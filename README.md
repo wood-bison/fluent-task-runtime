@@ -18,15 +18,15 @@ published Event Loop bridge:
 - `/v1/health/live` and `/v1/health/ready` are explicit;
 - `/v1/profiles` exposes the declared Node, .NET, PostgreSQL, Go and Java
   profiles;
-- `/v1/tasks` exposes 18 pinned task-revision descriptors (12 Node.js,
-  one .NET, three PostgreSQL, one Go and one Java). The active family release
-  advertises 17 runnable revisions; `project-book-boundary-001@1` is an
+- `/v1/tasks` exposes 20 pinned task-revision descriptors (13 Node.js,
+  two .NET, three PostgreSQL, one Go and one Java). The active family release
+  advertises 19 runnable revisions; `project-book-boundary-001@1` is an
   explicit `unreleased`/`brief_only` family until its authoring and evidence
   contract is complete. The profile catalogue remains explicit, so a future
   descriptor is `declared` until its own harness proof lands;
 - every released task carries the exact Question Brain release ID. The
   active immutable revision identity is supplied by
-  [`releases/task-release-2026-08-25-qb-d00a1493-g8.json`](releases/task-release-2026-08-25-qb-d00a1493-g8.json):
+  [`releases/task-release-2026-08-25-qb-d00a1493-g9.json`](releases/task-release-2026-08-25-qb-d00a1493-g9.json):
   each entry pins `stableKey`, Question Brain `revisionId`, and
   `contentHash`, names its `taskFamilyKey`, and exposes explicit
   `capabilityKeys` for the executable station crosswalk. The removed

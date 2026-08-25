@@ -1,0 +1,25 @@
+{
+  "taskId": "csharp-rate-limiter-001",
+  "revision": 1,
+  "status": "released",
+  "title": "Rate limiter in .NET",
+  "summary": "Implement a deterministic per-key token bucket with explicit .NET time and state boundaries.",
+  "breadcrumb": [".NET + C#", "Resilience and bounded work"],
+  "concepts": ["Token bucket", "Time-based refill", "Per-key state", "Deterministic time"],
+  "runtime": ".NET 10",
+  "language": "csharp",
+  "profile": "dotnet",
+  "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
+  "image": "fluent-runtime-task-dotnet:1",
+  "checkCommand": ["bash", "/opt/harness/run.sh"],
+  "editableFiles": ["RateLimiter.cs"],
+  "timeoutMs": 30000,
+  "memoryMb": 1536,
+  "cpus": 1,
+  "declaredTests": [
+    "allows requests inside the configured burst",
+    "refills tokens over elapsed time",
+    "isolates independent keys",
+    "rejects requests after the bucket is empty"
+  ]
+}
