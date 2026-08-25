@@ -7,9 +7,15 @@ workspace="${QUESTION_BRAIN_WORKSPACE:-fluent-interview}"
 tmp_manifest="$(mktemp -t fluent-task-runtime-g8.XXXXXX.json)"
 trap 'rm -f "$tmp_manifest"' EXIT
 
+source_manifest="${RUNTIME_RELEASE_SOURCE:-releases/task-release-2026-08-25-qb-d00a1493-g9.json}"
+test -s "${source_manifest}"
+expected_task_count="$(jq '.tasks | length' "${source_manifest}")"
+test "${expected_task_count}" -gt 0
+
 summary="$(curl -fsS "$runtime_url/v1/tasks/summary")"
 printf '%s\n' "$summary" | jq -e \
   --arg workspace "$workspace" \
+  --argjson expectedTaskCount "$expected_task_count" \
   '(.contractVersion == "fluent-task-runtime.task-summary.v1") and
    (.bindingState == "manifest-loaded") and (.runnable == true) and
    (.runtimeReleaseId | startswith("runtime-task-release-")) and
@@ -18,12 +24,12 @@ printf '%s\n' "$summary" | jq -e \
    (.capabilityBindingReleaseId != null) and
    (.capabilityRegistryReleaseId != null) and
    (.taskFamilyReleaseId != null) and
-   ((.tasks | length) == 18) and
+   ((.tasks | length) == $expectedTaskCount) and
    ([.tasks[] | select(.status == "released") | (.taskFamilyKey != null and (.questionBindings | type == "array") and (.capabilityKeys | type == "array"))] | all)' \
   >/dev/null
 
 python3 scripts/release/generate-question-release.py \
-  --source releases/task-release-2026-08-25-qb-d550846f-g3.json \
+  --source "${source_manifest}" \
   --question-brain "$brain_url" \
   --runtime-api "$runtime_url" \
   --workspace "$workspace" \
@@ -33,9 +39,10 @@ python3 scripts/release/generate-question-release.py \
   >/dev/null
 
 jq -e \
+  --argjson expectedTaskCount "$expected_task_count" \
   '(.contractVersion == "fluent-task-runtime.task-release.v3") and
    (.workspaceKey == "fluent-interview") and
-   ((.tasks | length) == 18) and
+   ((.tasks | length) == $expectedTaskCount) and
    ((.capabilityKeys | length) > 0) and
    ([.tasks[] | (.taskFamilyKey != null and (.questionBindings | type == "array") and (.capabilityKeys | type == "array") and (has("questionKeys") | not))] | all)' \
   "$tmp_manifest" >/dev/null

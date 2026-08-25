@@ -47,8 +47,9 @@ def main() -> int:
     if source.get("contractVersion") not in {
         "fluent-task-runtime.task-release.v1",
         "fluent-task-runtime.task-release.v2",
+        "fluent-task-runtime.task-release.v3",
     }:
-        raise SystemExit("source manifest must be a v1/v2 runtime release history")
+        raise SystemExit("source manifest must be a v1/v2/v3 runtime release history")
 
     query = urllib.parse.urlencode({"workspace": args.workspace})
     url = args.question_brain.rstrip("/") + "/v1/release?" + query
