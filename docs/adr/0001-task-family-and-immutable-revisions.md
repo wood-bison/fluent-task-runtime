@@ -29,9 +29,10 @@ QuestionCard or Capability. The runtime never fetches question prose during a
 Run and never writes Question Brain or Lab Evidence.
 
 `question-capability-task.v1` is the cross-repository identity contract. The
-existing `questionBindings` array is authoritative; `questionKeys` remains a
-read-only compatibility projection until the removal gate in the production
-plan is complete. A manifest without immutable revision/hash pins is rejected.
+`questionBindings` array is authoritative for question-backed revisions and
+`capabilityKeys` is authoritative for capability-only revisions. The removed
+overloaded `questionKeys` projection is rejected by current readers; manifests
+without immutable revision/hash pins are rejected.
 
 ## Consequences
 
@@ -49,4 +50,3 @@ plan is complete. A manifest without immutable revision/hash pins is rejected.
 - Making each language a different capability: confuses implementation choice
   with the observable skill unless technology is intrinsically part of that
   skill (for example, Node event-loop ordering).
-
