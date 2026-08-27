@@ -1,0 +1,214 @@
+{
+  "contractVersion": "fluent-task-runtime.task-portfolio.v1",
+  "portfolioId": "task-portfolio-production-closure-2026-08-27",
+  "sourceTaskFamilyReleaseId": "task-family-release-2026-08-26-g10",
+  "target": {
+    "familyCount": 168,
+    "revisionCount": 456,
+    "kinds": [
+      {
+        "kind": "algorithm",
+        "familyCount": 60,
+        "revisionCount": 300
+      },
+      {
+        "kind": "shared_backend",
+        "familyCount": 12,
+        "revisionCount": 60
+      },
+      {
+        "kind": "native",
+        "familyCount": 80,
+        "revisionCount": 80
+      },
+      {
+        "kind": "postgresql",
+        "familyCount": 16,
+        "revisionCount": 16
+      }
+    ]
+  },
+  "compatibilitySets": [
+    {
+      "id": "cross-language-five",
+      "revisions": [
+        { "language": "javascript", "profile": "node" },
+        { "language": "typescript", "profile": "node" },
+        { "language": "java", "profile": "java" },
+        { "language": "go", "profile": "go" },
+        { "language": "csharp", "profile": "dotnet" }
+      ]
+    },
+    {
+      "id": "native-node",
+      "revisions": [{ "language": "javascript", "profile": "node" }]
+    },
+    {
+      "id": "native-java",
+      "revisions": [{ "language": "java", "profile": "java" }]
+    },
+    {
+      "id": "native-go",
+      "revisions": [{ "language": "go", "profile": "go" }]
+    },
+    {
+      "id": "native-dotnet",
+      "revisions": [{ "language": "csharp", "profile": "dotnet" }]
+    },
+    {
+      "id": "native-vue",
+      "revisions": [{ "language": "typescript", "profile": "browser" }]
+    },
+    {
+      "id": "postgresql-sql",
+      "revisions": [{ "language": "sql", "profile": "postgres" }]
+    }
+  ],
+  "groups": [
+    {
+      "id": "algorithms",
+      "kind": "algorithm",
+      "compatibilitySet": "cross-language-five",
+      "targetFamilyCount": 60,
+      "targetRevisionsPerFamily": 5,
+      "existingFamilies": [
+        { "familyKey": "task-family.fluent-calculator", "disposition": "existing" }
+      ],
+      "plannedSeries": {
+        "prefix": "task-family.algorithm-",
+        "start": 1,
+        "count": 59,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "shared-backend",
+      "kind": "shared_backend",
+      "compatibilitySet": "cross-language-five",
+      "targetFamilyCount": 12,
+      "targetRevisionsPerFamily": 5,
+      "existingFamilies": [
+        { "familyKey": "task-family.rate-limiter", "disposition": "existing" },
+        { "familyKey": "task-family.authentication-authorization", "disposition": "existing" },
+        { "familyKey": "task-family.cache-invalidation", "disposition": "existing" },
+        { "familyKey": "task-family.idempotent-delivery", "disposition": "existing" }
+      ],
+      "plannedSeries": {
+        "prefix": "task-family.shared-backend-",
+        "start": 1,
+        "count": 8,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "native-node",
+      "kind": "native",
+      "nativeTrack": "node",
+      "compatibilitySet": "native-node",
+      "targetFamilyCount": 16,
+      "targetRevisionsPerFamily": 1,
+      "existingFamilies": [
+        { "familyKey": "task-family.deferred", "disposition": "existing" },
+        { "familyKey": "task-family.bounded-concurrency", "disposition": "existing" },
+        { "familyKey": "task-family.cpu-bound-work", "disposition": "existing" },
+        { "familyKey": "task-family.event-loop-ordering", "disposition": "existing" },
+        { "familyKey": "task-family.memory-retention", "disposition": "existing" },
+        { "familyKey": "task-family.streams-backpressure", "disposition": "existing" }
+      ],
+      "plannedSeries": {
+        "prefix": "task-family.native-node-",
+        "start": 1,
+        "count": 10,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "native-java",
+      "kind": "native",
+      "nativeTrack": "java",
+      "compatibilitySet": "native-java",
+      "targetFamilyCount": 16,
+      "targetRevisionsPerFamily": 1,
+      "existingFamilies": [],
+      "plannedSeries": {
+        "prefix": "task-family.native-java-",
+        "start": 1,
+        "count": 16,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "native-go",
+      "kind": "native",
+      "nativeTrack": "go",
+      "compatibilitySet": "native-go",
+      "targetFamilyCount": 16,
+      "targetRevisionsPerFamily": 1,
+      "existingFamilies": [],
+      "plannedSeries": {
+        "prefix": "task-family.native-go-",
+        "start": 1,
+        "count": 16,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "native-dotnet",
+      "kind": "native",
+      "nativeTrack": "dotnet",
+      "compatibilitySet": "native-dotnet",
+      "targetFamilyCount": 16,
+      "targetRevisionsPerFamily": 1,
+      "existingFamilies": [
+        { "familyKey": "task-family.dotnet-cancellation", "disposition": "existing" }
+      ],
+      "plannedSeries": {
+        "prefix": "task-family.native-dotnet-",
+        "start": 1,
+        "count": 15,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "native-vue",
+      "kind": "native",
+      "nativeTrack": "vue",
+      "compatibilitySet": "native-vue",
+      "targetFamilyCount": 16,
+      "targetRevisionsPerFamily": 1,
+      "existingFamilies": [],
+      "plannedSeries": {
+        "prefix": "task-family.native-vue-",
+        "start": 1,
+        "count": 16,
+        "disposition": "new"
+      }
+    },
+    {
+      "id": "postgresql",
+      "kind": "postgresql",
+      "compatibilitySet": "postgresql-sql",
+      "targetFamilyCount": 16,
+      "targetRevisionsPerFamily": 1,
+      "existingFamilies": [
+        { "familyKey": "task-family.postgresql-query-planning", "disposition": "existing" },
+        { "familyKey": "task-family.postgresql-row-locks", "disposition": "existing" },
+        { "familyKey": "task-family.postgresql-rate-limiting", "disposition": "existing" }
+      ],
+      "plannedSeries": {
+        "prefix": "task-family.postgresql-portfolio-",
+        "start": 1,
+        "count": 13,
+        "disposition": "new"
+      }
+    }
+  ],
+  "supersededFamilies": [
+    {
+      "familyKey": "task-family.project-book-boundary",
+      "disposition": "superseded",
+      "replacementOwner": "fluent-engineering-lab/project-book",
+      "reason": "Project orchestration belongs to Fluent Lab; Task Runtime retains the immutable historical revision only."
+    }
+  ]
+}
