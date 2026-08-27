@@ -19,6 +19,11 @@ type Health struct {
 	Ready           bool              `json:"ready"`
 	Dependencies    map[string]string `json:"dependencies"`
 	CheckedAt       time.Time         `json:"checkedAt"`
+	// Build identity is operator metadata only. It never contains source,
+	// learner answers, task files or hidden fixtures.
+	SourceRevision string `json:"sourceRevision,omitempty"`
+	ReleaseID      string `json:"releaseId,omitempty"`
+	Environment    string `json:"environment,omitempty"`
 }
 
 type Profile struct {

@@ -12,7 +12,7 @@
   "profile": "postgres",
   "capabilityKeys": ["capability.data-postgresql.pg-locks-016"],
   "artifacts": ["claims.json"],
-  "image": "fluent-runtime-task-postgres:1",
+  "image": "fluent-runtime-task-postgres@sha256:feb73b643812a920a2e2002c9952cee0a2abdd230a1f5d00c5a1e8393db02e93",
   "checkCommand": ["bash", "/opt/harness/run.sh"],
   "editableFiles": ["solution.sql"],
   "timeoutMs": 30000,

@@ -59,18 +59,33 @@ function classifyFailure(detail) {
   }
 
   if (typeof cause === 'string') {
-    return { status: 'error', message: cause };
+    return { status: 'error', message: learnerDiagnostic(cause) };
   }
 
   if (cause && typeof cause.message === 'string') {
-    return { status: 'error', message: cause.message };
+    return { status: 'error', message: learnerDiagnostic(cause.message) };
   }
 
   if (error && typeof error.message === 'string') {
-    return { status: 'error', message: error.message };
+    return { status: 'error', message: learnerDiagnostic(error.message) };
   }
 
   return { status: 'error', message: 'The test threw without a recognisable message.' };
+}
+
+// Never return the hidden test mount or its filenames in a learner result.
+// Keep a short, actionable diagnostic while dropping stack frames that only
+// identify private harness implementation details.
+function learnerDiagnostic(value) {
+  return String(value)
+    .replaceAll(/\/hidden-tests(?:\/[A-Za-z0-9_.-]+)*/gu, '<private>')
+    .replaceAll(/\/solution(?:\/[A-Za-z0-9_.-]+)*/gu, '<submission>')
+    .replaceAll(/\/output(?:\/[A-Za-z0-9_.-]+)*/gu, '<runtime-output>')
+    .split(/\r?\n/u)
+    .filter((line) => !line.includes('<private>'))
+    .slice(0, 12)
+    .join('\n')
+    .trim() || 'The submitted file could not be loaded.';
 }
 
 function safeStringify(value) {
@@ -147,9 +162,10 @@ async function main() {
   if (tests.length === 0) {
     // Every test file failed before registering a single test — a compile
     // or load failure. The learner's code did not run at all.
-    const message =
+    const message = learnerDiagnostic(
       [...stderrByFile.values()].join('').trim() ||
-      'The submitted file could not be loaded.';
+        'The submitted file could not be loaded.',
+    );
     writeResults({
       version: RESULTS_VERSION,
       status: 'error',

@@ -3,9 +3,12 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -20,6 +23,19 @@ import (
 type Server struct {
 	catalogue *engine.Catalogue
 	executor  engine.RunExecutor
+	metrics   *runtimeMetrics
+}
+
+// runtimeMetrics is deliberately tiny and cardinality-free. Runtime is an
+// execution authority, so Prometheus receives aggregate request/run counters;
+// task ids, correlation ids and learner data stay in traces/evidence instead
+// of becoming unbounded metric labels.
+type runtimeMetrics struct {
+	httpRequests atomic.Uint64
+	runRequests  atomic.Uint64
+	runPasses    atomic.Uint64
+	runFailures  atomic.Uint64
+	runErrors    atomic.Uint64
 }
 
 func NewServer(catalogue *engine.Catalogue, executors ...engine.RunExecutor) http.Handler {
@@ -27,10 +43,12 @@ func NewServer(catalogue *engine.Catalogue, executors ...engine.RunExecutor) htt
 	if len(executors) > 0 && executors[0] != nil {
 		executor = executors[0]
 	}
-	server := &Server{catalogue: catalogue, executor: executor}
+	metrics := &runtimeMetrics{}
+	server := &Server{catalogue: catalogue, executor: executor, metrics: metrics}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/health/live", server.live)
 	mux.HandleFunc("GET /v1/health/ready", server.ready)
+	mux.HandleFunc("GET /v1/metrics", metrics.prometheus)
 	mux.HandleFunc("GET /v1/profiles", server.profiles)
 	mux.HandleFunc("GET /v1/tasks", server.tasks)
 	mux.HandleFunc("GET /v1/tasks/summary", server.taskSummary)
@@ -38,10 +56,23 @@ func NewServer(catalogue *engine.Catalogue, executors ...engine.RunExecutor) htt
 	mux.HandleFunc("GET /v1/task-families/{familyKey}", server.taskFamily)
 	mux.HandleFunc("GET /v1/tasks/{taskId}/workspace", server.workspace)
 	mux.HandleFunc("POST /v1/runs", server.runs)
-	return requestLog(mux)
+	return requestLog(mux, metrics)
+}
+
+func (m *runtimeMetrics) prometheus(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("content-type", "text/plain; version=0.0.4")
+	fmt.Fprintf(w, "# HELP fel_runtime_http_requests_total Total HTTP requests handled by Task Runtime.\n")
+	fmt.Fprintf(w, "# TYPE fel_runtime_http_requests_total counter\nfel_runtime_http_requests_total %d\n", m.httpRequests.Load())
+	fmt.Fprintf(w, "# HELP fel_runtime_run_requests_total Total task run requests accepted by Task Runtime.\n")
+	fmt.Fprintf(w, "# TYPE fel_runtime_run_requests_total counter\nfel_runtime_run_requests_total %d\n", m.runRequests.Load())
+	fmt.Fprintf(w, "# HELP fel_runtime_run_results_total Task run results grouped by bounded outcome.\n")
+	fmt.Fprintf(w, "# TYPE fel_runtime_run_results_total counter\nfel_runtime_run_results_total{outcome=\"pass\"} %d\n", m.runPasses.Load())
+	fmt.Fprintf(w, "fel_runtime_run_results_total{outcome=\"fail\"} %d\n", m.runFailures.Load())
+	fmt.Fprintf(w, "fel_runtime_run_results_total{outcome=\"error\"} %d\n", m.runErrors.Load())
 }
 
 func (s *Server) live(w http.ResponseWriter, _ *http.Request) {
+	identity := s.buildIdentity("")
 	writeJSON(w, http.StatusOK, contracts.Health{
 		ContractVersion: contracts.HealthContractVersion,
 		Service:         "fluent-task-runtime",
@@ -49,6 +80,9 @@ func (s *Server) live(w http.ResponseWriter, _ *http.Request) {
 		Ready:           true,
 		Dependencies:    map[string]string{},
 		CheckedAt:       time.Now().UTC(),
+		SourceRevision:  identity.SourceRevision,
+		ReleaseID:       identity.ReleaseID,
+		Environment:     identity.Environment,
 	})
 }
 
@@ -68,6 +102,7 @@ func (s *Server) ready(w http.ResponseWriter, _ *http.Request) {
 		status = http.StatusServiceUnavailable
 		state = "degraded"
 	}
+	identity := s.buildIdentity(release.RuntimeReleaseID)
 	writeJSON(w, status, contracts.Health{
 		ContractVersion: contracts.HealthContractVersion,
 		Service:         "fluent-task-runtime",
@@ -79,8 +114,64 @@ func (s *Server) ready(w http.ResponseWriter, _ *http.Request) {
 			"questionBindings": release.BindingState,
 			"questionRelease":  questionRelease,
 		},
-		CheckedAt: time.Now().UTC(),
+		CheckedAt:      time.Now().UTC(),
+		SourceRevision: identity.SourceRevision,
+		ReleaseID:      identity.ReleaseID,
+		Environment:    identity.Environment,
 	})
+}
+
+type buildIdentity struct {
+	SourceRevision string
+	ReleaseID      string
+	Environment    string
+}
+
+func (s *Server) buildIdentity(releaseID string) buildIdentity {
+	sourceRevision := strings.TrimSpace(os.Getenv("SOURCE_REVISION"))
+	if sourceRevision == "" {
+		sourceRevision = strings.TrimSpace(os.Getenv("TASK_RUNTIME_SOURCE_REVISION"))
+	}
+	if sourceRevision == "" {
+		sourceRevision = "unknown"
+	}
+	if releaseID == "" {
+		releaseID = strings.TrimSpace(os.Getenv("FEL_RELEASE_ID"))
+	}
+	if releaseID == "" {
+		releaseID = "unreleased"
+	}
+	environment := strings.TrimSpace(os.Getenv("FEL_ENVIRONMENT"))
+	if environment == "" {
+		environment = strings.TrimSpace(os.Getenv("NODE_ENV"))
+	}
+	if environment == "" {
+		environment = "unknown"
+	}
+	return buildIdentity{
+		SourceRevision: boundedIdentity(sourceRevision),
+		ReleaseID:      boundedIdentity(releaseID),
+		Environment:    boundedIdentity(environment),
+	}
+}
+
+func boundedIdentity(value string) string {
+	var builder strings.Builder
+	for _, char := range value {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') || strings.ContainsRune("._:/+-", char) {
+			builder.WriteRune(char)
+		} else {
+			builder.WriteByte('-')
+		}
+		if builder.Len() >= 79 {
+			break
+		}
+	}
+	if builder.Len() == 0 {
+		return "unknown"
+	}
+	return builder.String()
 }
 
 func (s *Server) profiles(w http.ResponseWriter, _ *http.Request) {
@@ -131,7 +222,11 @@ func (s *Server) workspace(w http.ResponseWriter, r *http.Request) {
 	var found bool
 	revisionText := strings.TrimSpace(r.URL.Query().Get("revision"))
 	if revisionText == "" {
-		task, found = s.catalogue.LatestTask(taskID)
+		// A workspace is evidence for an immutable TaskRevision. Selecting the
+		// highest revision here would make a deep link silently change meaning
+		// after a release, so callers must carry the exact revision tuple.
+		writeJSON(w, http.StatusBadRequest, contracts.RuntimeError{ContractVersion: contracts.WorkspaceContractVersion, Code: "revision_required", Message: "an explicit task revision is required", Retryable: false})
+		return
 	} else {
 		revision, err := strconv.Atoi(revisionText)
 		if err != nil || revision < 1 {
@@ -157,6 +252,7 @@ func (s *Server) workspace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
+	s.metrics.runRequests.Add(1)
 	ctx, span := otel.Tracer("fluent-task-runtime/run").Start(r.Context(), "task.run", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 	r = r.WithContext(ctx)
@@ -189,6 +285,7 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 	}
 	response, err := s.executor.Run(r.Context(), request)
 	if err != nil {
+		s.metrics.runErrors.Add(1)
 		if execution, ok := err.(*engine.ExecutionError); ok {
 			status := execution.Status
 			if status == 0 {
@@ -201,11 +298,17 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	span.SetAttributes(attribute.String("fluent.run.result", response.Results.Status))
+	if response.Results.Status == "pass" {
+		s.metrics.runPasses.Add(1)
+	} else {
+		s.metrics.runFailures.Add(1)
+	}
 	writeJSON(w, http.StatusOK, response)
 }
 
-func requestLog(next http.Handler) http.Handler {
+func requestLog(next http.Handler, metrics *runtimeMetrics) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		metrics.httpRequests.Add(1)
 		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 		ctx, span := otel.Tracer("fluent-task-runtime/http").Start(ctx, r.Method+" "+r.URL.Path, trace.WithSpanKind(trace.SpanKindServer))
 		defer span.End()

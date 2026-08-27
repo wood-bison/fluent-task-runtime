@@ -57,6 +57,8 @@ docs/verification/            release-smoke and hardening evidence
 4. Results are versioned and typed (`pass`, `fail`, `timeout`, `runtime_error`,
    `runtime_not_ready`); transport success is not a task pass.
 5. Profile and task changes require a real Docker smoke and updated evidence.
+   Released descriptors must reference an immutable `image@sha256:...` value
+   declared by `task-images/manifest.json`; mutable tags are build aliases only.
 6. Correlation/task/revision IDs belong in trace attributes and structured logs,
    not unbounded metric labels. Do not log source or hidden-test bodies.
 7. The Docker socket is a local development boundary only. Production should
@@ -86,6 +88,7 @@ Docker mounts. Keep resource limits and health checks enabled in every profile.
 - Delete unused catalogue entries and compatibility aliases rather than keeping
   fallback behavior.
 - Run Go tests, Docker-backed smoke for affected profiles, `git diff --check`,
-  and the relevant Compose readiness checks before committing to `main`.
+  `bash scripts/image-manifest-check.sh`, and the relevant Compose readiness
+  checks before committing to `main`.
 - Treat release evidence as reproducible verification, not as a substitute for
   the runtime contract.

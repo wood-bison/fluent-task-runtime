@@ -10,7 +10,7 @@
   "language": "go",
   "profile": "go",
   "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
-  "image": "fluent-runtime-task-go:1",
+  "image": "fluent-runtime-task-go@sha256:d10438acd00cde29fba2bf61f632605127efc6e0d685a066d2ac6aa6ab24c971",
   "checkCommand": ["bash", "/opt/harness/run.sh"],
   "editableFiles": ["main.go"],
   "timeoutMs": 30000,

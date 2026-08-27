@@ -1,27 +1,27 @@
 {
   "images": [
     {
-      "image": "fluent-runtime-task-node:1",
+      "image": "fluent-runtime-task-node@sha256:182e8833b5599a4638173c51bea8f1b47d538f8f4377d726571a064563b01f96",
       "context": "task-images/node",
       "sourceFiles": ["Dockerfile", "harness/run.js"]
     },
     {
-      "image": "fluent-runtime-task-postgres:1",
+      "image": "fluent-runtime-task-postgres@sha256:feb73b643812a920a2e2002c9952cee0a2abdd230a1f5d00c5a1e8393db02e93",
       "context": "task-images/postgres",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     },
     {
-      "image": "fluent-runtime-task-dotnet:1",
+      "image": "fluent-runtime-task-dotnet@sha256:5dcbeff68bd6284154bb1b45447c4a96a14b9cbffce27941754ea7e6a76c5f59",
       "context": "task-images/dotnet",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     },
     {
-      "image": "fluent-runtime-task-go:1",
+      "image": "fluent-runtime-task-go@sha256:d10438acd00cde29fba2bf61f632605127efc6e0d685a066d2ac6aa6ab24c971",
       "context": "task-images/go",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     },
     {
-      "image": "fluent-runtime-task-java:1",
+      "image": "fluent-runtime-task-java@sha256:3d8d94969a5b21cea9e2cf644c205a1f9d1bbe03dc644f4e006b7656dc94a576",
       "context": "task-images/java",
       "sourceFiles": ["Dockerfile", "harness/run.sh"]
     }

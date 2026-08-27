@@ -39,7 +39,7 @@ func testFamilyCatalogue(t *testing.T) *engine.Catalogue {
 func TestHealthAndProfiles(t *testing.T) {
 	catalogue := testCatalogue(t)
 	handler := NewServer(catalogue)
-	for _, path := range []string{"/v1/health/live", "/v1/health/ready", "/v1/profiles", "/v1/tasks", "/v1/tasks/summary", "/v1/tasks/node-event-loop-001/workspace"} {
+	for _, path := range []string{"/v1/health/live", "/v1/health/ready", "/v1/profiles", "/v1/tasks", "/v1/tasks/summary", "/v1/tasks/node-event-loop-001/workspace?revision=1"} {
 		recorder := httptest.NewRecorder()
 		handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
 		if recorder.Code != http.StatusOK {
@@ -109,6 +109,52 @@ func TestHealthAndProfiles(t *testing.T) {
 		if strings.HasPrefix(path, "tests/") || strings.Contains(path, "run.js") || strings.Contains(path, "hidden") {
 			t.Fatalf("workspace leaked execution internals: %s", path)
 		}
+	}
+
+	metricsRecorder := httptest.NewRecorder()
+	handler.ServeHTTP(metricsRecorder, httptest.NewRequest(http.MethodGet, "/v1/metrics", nil))
+	if metricsRecorder.Code != http.StatusOK || !strings.Contains(metricsRecorder.Header().Get("content-type"), "text/plain") {
+		t.Fatalf("metrics status/content type = %d %q", metricsRecorder.Code, metricsRecorder.Header().Get("content-type"))
+	}
+	metricsBody := metricsRecorder.Body.String()
+	for _, marker := range []string{
+		"# TYPE fel_runtime_http_requests_total counter",
+		"fel_runtime_run_requests_total",
+		"fel_runtime_run_results_total{outcome=\"pass\"}",
+	} {
+		if !strings.Contains(metricsBody, marker) {
+			t.Fatalf("runtime metrics missing %q: %s", marker, metricsBody)
+		}
+	}
+}
+
+func TestHealthProjectsBuildIdentityWithoutRawEnvironmentValues(t *testing.T) {
+	t.Setenv("SOURCE_REVISION", "runtime-sha-abc\nforged")
+	t.Setenv("FEL_RELEASE_ID", "runtime-release.2026/08")
+	t.Setenv("FEL_ENVIRONMENT", "development")
+	recorder := httptest.NewRecorder()
+	NewServer(testCatalogue(t)).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/health/ready", nil))
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("health status = %d, body = %s", recorder.Code, recorder.Body.String())
+	}
+	var health contracts.Health
+	if err := json.Unmarshal(recorder.Body.Bytes(), &health); err != nil {
+		t.Fatal(err)
+	}
+	if health.SourceRevision != "runtime-sha-abc-forged" || health.ReleaseID != "runtime-task-release-2026-08-24" || health.Environment != "development" {
+		t.Fatalf("unexpected build identity: %#v", health)
+	}
+	if strings.Contains(recorder.Body.String(), "\\nforged") {
+		t.Fatalf("raw control character escaped into health payload: %s", recorder.Body.String())
+	}
+}
+
+func TestWorkspaceRequiresExactRevision(t *testing.T) {
+	handler := NewServer(testCatalogue(t))
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/tasks/node-event-loop-001/workspace", nil))
+	if recorder.Code != http.StatusBadRequest || !strings.Contains(recorder.Body.String(), `"code":"revision_required"`) {
+		t.Fatalf("workspace without revision was not rejected: %d %s", recorder.Code, recorder.Body.String())
 	}
 }
 

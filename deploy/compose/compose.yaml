@@ -18,6 +18,9 @@ services:
     logging: *json-logging
     environment:
       RUNTIME_PORT: "48227"
+      SOURCE_REVISION: ${TASK_RUNTIME_SOURCE_REVISION:-unknown}
+      FEL_RELEASE_ID: ${TASK_RUNTIME_RELEASE_ID:-unreleased}
+      FEL_ENVIRONMENT: ${FEL_ENVIRONMENT:-local-compose}
       OTEL_SERVICE_NAME: fluent-task-runtime
       # The workspace owns one Jaeger (Question Brain, host OTLP/gRPC 54317).
       # Override RT_OTLP_ENDPOINT when running this repository standalone.

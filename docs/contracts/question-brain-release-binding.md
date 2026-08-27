@@ -117,8 +117,11 @@ readiness probe is degraded, and both workspace and run requests return
 `runtime_not_ready`; descriptor compatibility is never a runnable fallback.
 `GET /v1/tasks/{taskId}/workspace` is the learner-material boundary: it returns
 `brief.md` and files under `starter/`, never `tests/`, hidden tests, or harness
-commands. If a released task has no authored `brief.md`, the endpoint returns
-`workspace_unavailable`; it does not invent a fallback brief.
+commands. The caller must supply the exact positive revision as
+`?revision=<n>`; an omitted revision returns `revision_required` and never
+falls back to the latest catalogue row. If a released task has no authored
+`brief.md`, the endpoint returns `workspace_unavailable`; it does not invent a
+fallback brief.
 
 ## Migration policy
 

@@ -10,7 +10,7 @@
   "language": "javascript",
   "profile": "node",
   "capabilityKeys": ["capability.runtime.node-concurrency-012"],
-  "image": "fluent-runtime-task-node:1",
+  "image": "fluent-runtime-task-node@sha256:182e8833b5599a4638173c51bea8f1b47d538f8f4377d726571a064563b01f96",
   "checkCommand": ["node", "/opt/harness/run.js"],
   "editableFiles": ["pool.js"],
   "timeoutMs": 20000,

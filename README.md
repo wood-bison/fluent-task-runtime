@@ -121,10 +121,12 @@ a task title or breadcrumb. See
 complete contract and fail-closed rules.
 `GET /v1/tasks/{taskId}/workspace` returns the learner brief and starter files
 only once a release is selected; hidden tests and harness files never cross
-this API boundary. A released task without an authored `brief.md` is reported
-as `workspace_unavailable` rather than receiving a synthesized fallback; this
-currently keeps the project-book task closed until its learner brief is
-authored.
+this API boundary. Callers must include the exact positive revision in
+`?revision=<n>`; omitting it returns the typed `revision_required` refusal
+rather than silently selecting the latest revision. A released task without an
+authored `brief.md` is reported as `workspace_unavailable` rather than
+receiving a synthesized fallback; this currently keeps the project-book task
+closed until its learner brief is authored.
 
 ## Local development
 
@@ -149,7 +151,17 @@ docker compose -f deploy/compose/compose.yaml up -d
 ```
 
 The `fluent-runtime-task-*` image namespace is dedicated to this runtime, so
-rebuilding the Lab cannot silently replace a task sandbox image.
+rebuilding the Lab cannot silently replace a task sandbox image. Released task
+descriptors and `task-images/manifest.json` use the resulting immutable
+`image@sha256:...` references; the tag-only commands above are build inputs,
+not execution references. After rebuilding a task image, publish a new
+release snapshot and update the digest references together. Verify the current
+checkout and daemon with:
+
+```sh
+bash scripts/image-manifest-check.sh --static  # repository contract
+bash scripts/image-manifest-check.sh          # contract + local daemon
+```
 
 Verify that the shared service is receiving traces after a smoke run:
 

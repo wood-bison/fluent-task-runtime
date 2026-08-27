@@ -10,7 +10,7 @@
   "language": "java",
   "profile": "java",
   "capabilityKeys": ["capability.distributed-systems.rate-limiter"],
-  "image": "fluent-runtime-task-java:1",
+  "image": "fluent-runtime-task-java@sha256:3d8d94969a5b21cea9e2cf644c205a1f9d1bbe03dc644f4e006b7656dc94a576",
   "checkCommand": ["bash", "/opt/harness/run.sh"],
   "editableFiles": ["RateLimiter.java"],
   "timeoutMs": 30000,

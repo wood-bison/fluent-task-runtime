@@ -1,0 +1,51 @@
+name: Fluent Task Runtime verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: Go tests, vet and formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Task Runtime
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+
+      - name: Verify formatting
+        run: test -z "$(gofmt -l ./cmd ./internal)"
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Run vet
+        run: go vet ./...
+
+  contract:
+    name: Contract, image and Compose checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Task Runtime
+        uses: actions/checkout@v4
+
+      - name: Verify immutable task references
+        run: bash scripts/image-manifest-check.sh --static
+
+      - name: Verify Compose contract
+        run: docker compose -f deploy/compose/compose.yaml config --quiet

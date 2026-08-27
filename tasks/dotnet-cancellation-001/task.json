@@ -10,7 +10,7 @@
   "language": "csharp",
   "profile": "dotnet",
   "capabilityKeys": ["capability.runtime.dotnet-cancellation-001"],
-  "image": "fluent-runtime-task-dotnet:1",
+  "image": "fluent-runtime-task-dotnet@sha256:5dcbeff68bd6284154bb1b45447c4a96a14b9cbffce27941754ea7e6a76c5f59",
   "checkCommand": ["bash", "/opt/harness/run.sh"],
   "editableFiles": ["cancellation.cs"],
   "timeoutMs": 30000,

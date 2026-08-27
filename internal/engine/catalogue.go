@@ -54,11 +54,11 @@ func NewCatalogue() (*Catalogue, error) {
 		}
 	}
 	profiles := []contracts.Profile{
-		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fluent-runtime-task-node:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 10", Image: "fluent-runtime-task-dotnet:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "postgres", DisplayName: "PostgreSQL", Toolchain: "PostgreSQL 17", Image: "fluent-runtime-task-postgres:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "go", DisplayName: "Go", Toolchain: "Go 1.24", Image: "fluent-runtime-task-go:1", Status: "declared", Network: "none", HiddenTests: true},
-		{ID: "java", DisplayName: "Java", Toolchain: "JDK 21", Image: "fluent-runtime-task-java:1", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "node", DisplayName: "Node.js", Toolchain: "Node.js 24", Image: "fluent-runtime-task-node@sha256:182e8833b5599a4638173c51bea8f1b47d538f8f4377d726571a064563b01f96", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "dotnet", DisplayName: ".NET", Toolchain: ".NET 10", Image: "fluent-runtime-task-dotnet@sha256:5dcbeff68bd6284154bb1b45447c4a96a14b9cbffce27941754ea7e6a76c5f59", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "postgres", DisplayName: "PostgreSQL", Toolchain: "PostgreSQL 17", Image: "fluent-runtime-task-postgres@sha256:feb73b643812a920a2e2002c9952cee0a2abdd230a1f5d00c5a1e8393db02e93", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "go", DisplayName: "Go", Toolchain: "Go 1.24", Image: "fluent-runtime-task-go@sha256:d10438acd00cde29fba2bf61f632605127efc6e0d685a066d2ac6aa6ab24c971", Status: "declared", Network: "none", HiddenTests: true},
+		{ID: "java", DisplayName: "Java", Toolchain: "JDK 21", Image: "fluent-runtime-task-java@sha256:3d8d94969a5b21cea9e2cf644c205a1f9d1bbe03dc644f4e006b7656dc94a576", Status: "declared", Network: "none", HiddenTests: true},
 	}
 	for index := range profiles {
 		for _, task := range tasks {
