@@ -18,11 +18,15 @@ import (
 )
 
 const (
-	resultsCaptureLimit = 1 << 20
-	outputCaptureLimit  = 1 << 20
-	requestFilesLimit   = 32
-	requestBytesLimit   = 1 << 20
+	resultsCaptureLimit     = 1 << 20
+	outputCaptureLimit      = 1 << 20
+	requestFilesLimit       = 32
+	requestBytesLimit       = 1 << 20
+	imageInspectTimeout     = 2 * time.Second
+	containerCleanupTimeout = 5 * time.Second
 )
+
+var immutableImagePattern = regexp.MustCompile(`@sha256:[0-9a-f]{64}$`)
 
 type ExecutionError struct {
 	Code      string
@@ -77,6 +81,9 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 	if len(task.CheckCommand) == 0 || len(task.EditableFiles) == 0 {
 		return contracts.RunResponse{}, &ExecutionError{Code: "task_not_packaged", Message: fmt.Sprintf("task %q has no executable harness metadata", request.TaskID), Status: 503, Retryable: false}
 	}
+	if err := e.verifyImageDigest(parent, task.Image); err != nil {
+		return contracts.RunResponse{}, &ExecutionError{Code: "sandbox_unavailable", Message: err.Error(), Status: 503, Retryable: true}
+	}
 	if err := validateFiles(request.Files, task.EditableFiles); err != nil {
 		return contracts.RunResponse{}, &ExecutionError{Code: "invalid_request", Message: err.Error(), Status: 400}
 	}
@@ -121,6 +128,7 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 	}
 	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
+	name := dockerContainerName(task.ID, correlationID)
 	args := dockerArgs(task, inputDir, hiddenDir, outputDir, correlationID)
 	command := exec.CommandContext(ctx, e.docker, args...)
 	stdout := &limitedBuffer{limit: outputCaptureLimit}
@@ -128,6 +136,11 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 	command.Stdout = stdout
 	command.Stderr = stderr
 	err = command.Run()
+	// `--rm` only removes a container after the Docker CLI receives a normal
+	// completion. When context timeout kills the CLI, the daemon can keep the
+	// child running. Always issue an independent, bounded cleanup request so a
+	// timed-out learner run cannot leak containers or keep consuming resources.
+	e.cleanupContainer(name)
 	if ctx.Err() != nil {
 		return contracts.RunResponse{}, &ExecutionError{Code: "timeout", Message: fmt.Sprintf("task %q exceeded its %dms wall-clock limit", request.TaskID, timeout.Milliseconds()), Status: 504, Retryable: true}
 	}
@@ -154,6 +167,11 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 	if validationErr := validateResults(results); validationErr != nil {
 		return contracts.RunResponse{}, &ExecutionError{Code: "runner_protocol", Message: validationErr.Error(), Status: 502, Retryable: false}
 	}
+	// The result document is authored by a private harness.  Sanitize every
+	// learner-visible diagnostic and drop optional test source before it crosses
+	// the HTTP boundary; sanitizing only Docker stderr is insufficient because a
+	// Node load failure is serialized in results.message.
+	sanitizeResults(&results)
 	artifacts := map[string]string{}
 	for _, relative := range task.Artifacts {
 		if !safeRelativePath(relative) {
@@ -174,6 +192,44 @@ func (e *DockerExecutor) Run(parent context.Context, request contracts.RunReques
 		Stderr:          sanitizeError(stderr.String()),
 		Artifacts:       artifacts,
 	}, nil
+}
+
+// verifyImageDigest is deliberately performed immediately before preparing a
+// run. A mutable local tag can point at a different image between catalogue
+// load and execution; inspecting the exact immutable reference closes that
+// TOCTOU window and makes a stale/missing sandbox an explicit retryable error.
+func (e *DockerExecutor) verifyImageDigest(parent context.Context, image string) error {
+	image = strings.TrimSpace(image)
+	if !immutableImagePattern.MatchString(image) {
+		return fmt.Errorf("runtime image %q is not an immutable @sha256 reference", image)
+	}
+	ctx, cancel := context.WithTimeout(parent, imageInspectTimeout)
+	defer cancel()
+	command := exec.CommandContext(ctx, e.docker, "image", "inspect", "--format", "{{json .RepoDigests}}", image)
+	stdout := &limitedBuffer{limit: 16 * 1024}
+	stderr := &limitedBuffer{limit: 16 * 1024}
+	command.Stdout = stdout
+	command.Stderr = stderr
+	if err := command.Run(); err != nil {
+		if ctx.Err() != nil {
+			return fmt.Errorf("runtime image %q digest inspection timed out", image)
+		}
+		message := strings.TrimSpace(sanitizeError(stderr.String()))
+		if message == "" {
+			message = sanitizeError(err.Error())
+		}
+		return fmt.Errorf("runtime image %q is not available locally: %s", image, message)
+	}
+	var repoDigests []string
+	if err := json.Unmarshal([]byte(stdout.String()), &repoDigests); err != nil {
+		return fmt.Errorf("runtime image %q returned malformed digest metadata", image)
+	}
+	for _, repoDigest := range repoDigests {
+		if strings.TrimSpace(repoDigest) == image {
+			return nil
+		}
+	}
+	return fmt.Errorf("runtime image %q digest does not match the inspected image", image)
 }
 
 func (e *DockerExecutor) prepareTask(task contracts.Task, inputDir, hiddenDir string, files map[string]string) error {
@@ -212,7 +268,7 @@ func dockerArgs(task contracts.Task, inputDir, hiddenDir, outputDir, correlation
 	// Keep task container names in a dedicated namespace. Lab and runtime may
 	// be smoke-tested on the same Docker daemon; explicit names prevent cleanup
 	// and collision mistakes.
-	name := "fluent-runtime-task-" + safeToken(task.ID) + "-" + safeToken(correlationID)
+	name := dockerContainerName(task.ID, correlationID)
 	// The CLI captures stdout/stderr directly, so the task container does not
 	// need a Docker json-file log. Disabling it prevents a noisy or malicious
 	// submission from growing an unbounded daemon-side log between `run` and
@@ -222,6 +278,23 @@ func dockerArgs(task contracts.Task, inputDir, hiddenDir, outputDir, correlation
 		args = append(args[:len(args)-1], "--user", task.User, args[len(args)-1])
 	}
 	return append(args, task.CheckCommand...)
+}
+
+func dockerContainerName(taskID, correlationID string) string {
+	return "fluent-runtime-task-" + safeToken(taskID) + "-" + safeToken(correlationID)
+}
+
+func (e *DockerExecutor) cleanupContainer(name string) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), containerCleanupTimeout)
+	defer cancel()
+	// A successful run normally self-removes via --rm; rm -f is intentionally
+	// idempotent and also handles the timeout/cancel path. Cleanup failures are
+	// not learner-visible verdicts, but are kept in the daemon logs for ops.
+	_ = exec.CommandContext(ctx, e.docker, "rm", "-f", name).Run()
 }
 
 func validateFiles(files map[string]string, editable []string) error {
@@ -338,12 +411,43 @@ func safeRelativePath(value string) bool {
 
 var tokenPattern = regexp.MustCompile(`[^a-zA-Z0-9_.-]+`)
 
+// Runtime diagnostics are copied from a container boundary and may contain
+// absolute mount paths.  `/hidden-tests` identifies private harness files and
+// `/solution`/`/output` reveal implementation details that do not belong in a
+// learner-facing response.  Redact the complete path segment while keeping a
+// useful line/column suffix (for example `<hidden-test>:1:7`).
+var runtimeMountPathPattern = regexp.MustCompile(`(?i)/(?:hidden-tests|solution|output)(?:/[a-z0-9_.-]+)*`)
+
 func safeToken(value string) string { return tokenPattern.ReplaceAllString(value, "-") }
 
 func sanitizeError(value string) string {
 	value = strings.ReplaceAll(value, "\x1b", "")
 	value = strings.ReplaceAll(value, "\r", "")
+	value = runtimeMountPathPattern.ReplaceAllStringFunc(value, func(path string) string {
+		switch {
+		case strings.HasPrefix(strings.ToLower(path), "/hidden-tests"):
+			return "<private>"
+		case strings.HasPrefix(strings.ToLower(path), "/solution"):
+			return "<submission>"
+		default:
+			return "<runtime-output>"
+		}
+	})
 	return strings.TrimSpace(value)
+}
+
+func sanitizeResults(results *contracts.TestResults) {
+	if results == nil {
+		return
+	}
+	results.Message = sanitizeError(results.Message)
+	for index := range results.Tests {
+		results.Tests[index].Message = sanitizeError(results.Tests[index].Message)
+		results.Tests[index].Output = sanitizeError(results.Tests[index].Output)
+		// `test_code` is an optional Exercism-compatible field.  It is private
+		// harness source and must never become part of a learner response.
+		results.Tests[index].TestCode = ""
+	}
 }
 
 type limitedBuffer struct {
