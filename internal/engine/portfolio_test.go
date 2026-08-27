@@ -81,6 +81,43 @@ func TestTaskPortfolioManifestRejectsSourceReleaseMismatch(t *testing.T) {
 	}
 }
 
+func TestTaskPortfolioBacklogEnumeratesExactFamilyAndRevisionGap(t *testing.T) {
+	portfolioPath, familiesPath := taskPortfolioFixturePaths()
+	first, err := BuildTaskPortfolioBacklog(portfolioPath, familiesPath)
+	if err != nil {
+		t.Fatalf("build portfolio backlog: %v", err)
+	}
+	second, err := BuildTaskPortfolioBacklog(portfolioPath, familiesPath)
+	if err != nil {
+		t.Fatalf("build portfolio backlog twice: %v", err)
+	}
+	if first.Summary.OpenFamilyItems != 153 || first.Summary.OpenRevisionItems != 437 || first.Summary.OpenItemCount != 590 {
+		t.Fatalf("unexpected portfolio backlog counts: %+v", first.Summary)
+	}
+	if first.ContentDigest != second.ContentDigest {
+		t.Fatalf("portfolio backlog digest is not deterministic: %s != %s", first.ContentDigest, second.ContentDigest)
+	}
+	seen := make(map[string]struct{}, len(first.Items))
+	for _, item := range first.Items {
+		if _, duplicate := seen[item.ItemID]; duplicate {
+			t.Fatalf("duplicate backlog item %q", item.ItemID)
+		}
+		seen[item.ItemID] = struct{}{}
+		if item.Status != "open" || len(item.Acceptance) == 0 {
+			t.Fatalf("incomplete backlog item %+v", item)
+		}
+	}
+	if first.Items[0].FamilyKey != "task-family.fluent-calculator" || first.Items[0].Kind != "revision" {
+		t.Fatalf("expected existing family compatibility gaps first, got %+v", first.Items[0])
+	}
+	if first.Items[0].Language != "typescript" || first.Items[0].Profile != "node" {
+		t.Fatalf("expected first missing cross-language revision, got %+v", first.Items[0])
+	}
+	if first.Items[0].Wave != 1 || first.Items[0].BatchPosition != 1 {
+		t.Fatalf("expected first item in wave one, got %+v", first.Items[0])
+	}
+}
+
 func taskPortfolioFixturePaths() (string, string) {
 	return filepath.Join("..", "..", "task-portfolio", "manifest.json"), filepath.Join("..", "..", "task-families", "manifest.json")
 }
