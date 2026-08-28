@@ -4,8 +4,8 @@ The task runtime owns executable task revisions. Question Brain owns question
 content and content releases. This contract joins them without sharing a
 database or copying question prose into the runtime repository.
 
-> **Current production contract (2026-08-25):** the active join is
-> [`task-release-2026-08-25-qb-d00a1493-g8.json`](../../releases/task-release-2026-08-25-qb-d00a1493-g8.json),
+> **Current development contract (2026-08-28):** the active join is
+> [`task-release-2026-08-28-qb-d00a1493-g17.json`](../../releases/task-release-2026-08-28-qb-d00a1493-g17.json),
 > contract `fluent-task-runtime.task-release.v3`. It pins the Question Brain
 > source snapshot, capability binding/registry releases, and TaskFamily
 > release in addition to the exact question revision/hash bindings. The

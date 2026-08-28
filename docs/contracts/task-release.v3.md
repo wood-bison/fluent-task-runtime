@@ -78,8 +78,8 @@ python3 scripts/release/generate-question-release.py \
 
 The generator fails if any referenced card is absent, unpublished, non-
 production, or has no current revision/hash; it also fails if a TaskFamily or
-capability reference cannot be resolved. The committed production manifest is
-`releases/task-release-2026-08-25-qb-d00a1493-g8.json`.
+capability reference cannot be resolved. The committed development manifest is
+`releases/task-release-2026-08-28-qb-d00a1493-g17.json`.
 
 The runtime verification surface is:
 

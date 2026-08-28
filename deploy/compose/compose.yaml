@@ -33,7 +33,7 @@ services:
       RUNTIME_WORK_ROOT: "${RUNTIME_HOST_WORK_ROOT:-${PWD}/.runtime-work}"
       # Explicit release input. An empty value is intentionally degraded; it
       # must never silently select a historical descriptor or fallback.
-      RUNTIME_RELEASE_MANIFEST: "${RUNTIME_RELEASE_MANIFEST:-/opt/releases/task-release-2026-08-26-qb-d00a1493-g10.json}"
+      RUNTIME_RELEASE_MANIFEST: "${RUNTIME_RELEASE_MANIFEST:-/opt/releases/task-release-2026-08-28-qb-d00a1493-g17.json}"
       RUNTIME_TASK_FAMILY_MANIFEST: "${RUNTIME_TASK_FAMILY_MANIFEST:-/opt/task-families/manifest.json}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
